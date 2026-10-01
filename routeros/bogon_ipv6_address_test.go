@@ -1,6 +1,10 @@
 package routeros
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+)
 
 func TestBogonIPv6AddressVRFReadOnly(t *testing.T) {
 	previous := RouterOSVersion
@@ -26,5 +30,31 @@ func TestBogonIPv6AddressVRFReadOnly(t *testing.T) {
 	}
 	if value, present := payload["vrf"]; present {
 		t.Fatalf("read-only IPv6 VRF replayed during unrelated update: %q", value)
+	}
+}
+
+func TestBogonIPv6StaticAddressDiff(t *testing.T) {
+	tests := []struct {
+		name, old, desired, pool string
+		eui64, suppress          bool
+	}{
+		{"different host", "2001:db8::100/64", "2001:db8::1/64", "", false, false},
+		{"different prefix", "2001:db8::1/64", "::1/64", "", false, false},
+		{"different prefix length", "2001:db8::1/64", "2001:db8::1/80", "", false, false},
+		{"equivalent spelling", "2001:db8::1/64", "2001:0DB8:0:0:0:0:0:1/64", "", false, true},
+		{"malformed value", "2001:db8::1/64", "invalid", "", false, false},
+		{"EUI64 generation", "2001:db8::5c30:77ff:fe61:33ac/64", "2001:db8::/64", "", true, true},
+		{"pool generation", "2001:db8::1/64", "::1/64", "probe", false, true},
+	}
+	res := ResourceIPv6Address()
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			d := schema.TestResourceDataRaw(t, res.Schema, map[string]interface{}{
+				"address": tc.desired, "interface": "ether2", "eui_64": tc.eui64, "from_pool": tc.pool,
+			})
+			if got := res.Schema["address"].DiffSuppressFunc("address", tc.old, tc.desired, d); got != tc.suppress {
+				t.Fatalf("address diff suppressed=%v, want %v", got, tc.suppress)
+			}
+		})
 	}
 }

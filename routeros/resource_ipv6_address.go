@@ -1,6 +1,7 @@
 package routeros
 
 import (
+	"net/netip"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -58,6 +59,14 @@ func ResourceIPv6Address() *schema.Resource {
 
 				if old == "" || new == "" {
 					return false
+				}
+
+				if !d.Get("eui_64").(bool) && d.Get("from_pool").(string) == "" {
+					oldPrefix, oldErr := netip.ParsePrefix(old)
+					newPrefix, newErr := netip.ParsePrefix(new)
+					// Compare the complete address, including host bits. Masking
+					// would hide changes to static gateways within the same subnet.
+					return oldErr == nil && newErr == nil && oldPrefix == newPrefix
 				}
 
 				// k = address, old = fc00:3::5c30:77ff:fe61:33ac/64, new = fc00:3::/64
