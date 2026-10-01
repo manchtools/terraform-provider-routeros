@@ -41,6 +41,7 @@ const (
 	crudStart
 	crudStop
 	crudGenerateKey
+	crudUnset
 )
 
 type ExtraParams struct {

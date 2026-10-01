@@ -4,7 +4,7 @@ import (
 	"flag"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
-	"github.com/terraform-routeros/terraform-provider-routeros/routeros"
+	"github.com/manchtools/terraform-provider-routeros/routeros"
 )
 
 // Generate the Terraform provider documentation using `tfplugindocs`:
@@ -19,7 +19,7 @@ func main() {
 	flag.Parse()
 
 	plugin.Serve(&plugin.ServeOpts{
-		ProviderAddr: "terraform-routeros/routeros",
+		ProviderAddr: "manchtools/routeros",
 		ProviderFunc: routeros.NewProvider,
 		Debug:        debug,
 	})

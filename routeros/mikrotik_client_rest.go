@@ -43,6 +43,7 @@ var (
 		crudStart:       "POST",
 		crudStop:        "POST",
 		crudGenerateKey: "POST",
+		crudUnset:       "POST",
 	}
 )
 

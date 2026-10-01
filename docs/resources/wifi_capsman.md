@@ -1,6 +1,8 @@
 # routeros_wifi_capsman (Resource)
 *<span style="color:red">This resource requires a minimum version of RouterOS 7.13.</span>*
 
+Destroy disables CAPsMAN and verifies that it stopped before removing the singleton from state. Other settings, generated certificates, and physical radios are preserved.
+
 ## Example Usage
 ```terraform
 resource "routeros_wifi_capsman" "settings" {

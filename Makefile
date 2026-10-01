@@ -10,7 +10,7 @@ endif
 all: docs tfformat compile checksum clean
 
 test:
-	go test -timeout 30s github.com/terraform-routeros/terraform-provider-routeros
+	go test -timeout 30s github.com/manchtools/terraform-provider-routeros
 
 docs:
 	go generate ./...

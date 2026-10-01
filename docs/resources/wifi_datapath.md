@@ -19,15 +19,15 @@ resource "routeros_wifi_datapath" "datapath1" {
 
 ### Optional
 
-- `bridge` (String) Bridge interface to add the interface as a bridge port.
+- `bridge` (String) Bridge interface to add the interface as a bridge port. Omit to remove the profile override; use `none` to explicitly disable bridge membership.
 - `bridge_cost` (String) Spanning tree protocol cost of the bridge port.
 - `bridge_horizon` (String) Bridge horizon to use when adding as a bridge port.
 - `client_isolation` (Boolean) An option to toggle communication between clients connected to the same AP.
 - `comment` (String)
 - `disabled` (Boolean)
 - `interface_list` (String) List to which add the interface as a member.
-- `traffic_processing` (String)
-- `vlan_id` (Number) Default VLAN ID to assign to client devices connecting to this interface.
+- `traffic_processing` (String) Where traffic is processed: on-cap or on-capsman (CAPsMAN forwarding requires RouterOS 7.21 or newer). Omit to remove the profile override.
+- `vlan_id` (Number) Default VLAN ID to assign to client devices connecting to this interface. Omit to remove the profile override.
 
 ### Read-Only
 

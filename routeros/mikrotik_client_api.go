@@ -35,6 +35,7 @@ var (
 		crudStart:       "/start",
 		crudStop:        "/stop",
 		crudGenerateKey: "/generate-key",
+		crudUnset:       "/unset",
 	}
 )
 

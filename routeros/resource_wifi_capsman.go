@@ -1,6 +1,9 @@
 package routeros
 
 import (
+	"context"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -73,16 +76,46 @@ func ResourceWifiCapsman() *schema.Resource {
 	}
 
 	return &schema.Resource{
-		Description:   `*<span style="color:red">This resource requires a minimum version of RouterOS 7.13.</span>*`,
+		Description: `*<span style="color:red">This resource requires a minimum version of RouterOS 7.13.</span>*
+
+Destroy disables CAPsMAN and verifies that it stopped before removing the singleton from state. Other settings, generated certificates, and physical radios are preserved.`,
 		CreateContext: DefaultSystemCreate(resSchema),
 		ReadContext:   DefaultSystemRead(resSchema),
 		UpdateContext: DefaultSystemUpdate(resSchema),
-		DeleteContext: DefaultSystemDelete(resSchema),
+		DeleteContext: wifiCapsmanDelete(resSchema),
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: resSchema,
+	}
+}
+
+func wifiCapsmanDelete(s map[string]*schema.Schema) schema.DeleteContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		c := m.(Client)
+		path := GetMetadata(s).Path
+		updatePath := path
+		if c.GetTransport() == TransportREST {
+			updatePath += "/set"
+		}
+		// CAPsMAN is a settings singleton. Deleting only state leaves a running
+		// manager, while resetting all settings could affect unrelated certificates.
+		if err := c.SendRequest(crudPost, &URL{Path: updatePath}, MikrotikItem{"enabled": "false"}, nil); err != nil {
+			return diag.FromErr(err)
+		}
+		row := MikrotikItem{}
+		if err := c.SendRequest(crudRead, &URL{Path: path}, nil, &row); err != nil {
+			return diag.FromErr(err)
+		}
+		if row["enabled"] != "no" && row["enabled"] != "false" {
+			return diag.Errorf("CAPsMAN disable could not be verified: enabled=%q", row["enabled"])
+		}
+		if err := d.Set(KeyEnabled, false); err != nil {
+			return diag.FromErr(err)
+		}
+		d.SetId("")
+		return nil
 	}
 }

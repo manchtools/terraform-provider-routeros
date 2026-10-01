@@ -57,13 +57,7 @@ func ResourceRoutingBgpTemplate() *schema.Resource {
 		MetaResourcePath: PropResourcePath("/routing/bgp/template"),
 		MetaId:           PropId(Id),
 
-		"add_path_out": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			Description:  "",
-			Default:      "none",
-			ValidateFunc: validation.StringInSlice([]string{"all", "none"}, false),
-		},
+		"add_path_out": {Type: schema.TypeString, Computed: true, Description: "Observed legacy add-path policy before RouterOS 7.22."},
 		"address_families": {
 			Type:     schema.TypeString,
 			Optional: true,
@@ -166,6 +160,11 @@ func ResourceRoutingBgpTemplate() *schema.Resource {
 							"chain can only reject prefixes which means that it will still eat memory and will be " +
 							"visible in /routing route table as 'not active, filtered'. Changes to be applied " +
 							"required session restart.",
+					},
+					"add_path": {
+						Type:        schema.TypeString,
+						Optional:    true,
+						Description: "Accepted additional paths grouped by address family. Available in RouterOS starting from version 7.22.",
 					},
 					"accept_unknown": {
 						Type:     schema.TypeString,
@@ -338,6 +337,11 @@ func ResourceRoutingBgpTemplate() *schema.Resource {
 							"performance on single-core even possibly on multicore devices with small amount of " +
 							"cores) input - run output in the same process as input (can be set only for output " +
 							"affinity).",
+					},
+					"add_path": {
+						Type:        schema.TypeString,
+						Optional:    true,
+						Description: "Advertised additional paths grouped by address family. Available in RouterOS starting from version 7.22.",
 					},
 					"default_originate": {
 						Type:         schema.TypeString,

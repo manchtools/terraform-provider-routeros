@@ -49,6 +49,7 @@ resource "routeros_ipv6_firewall_mangle" "rule" {
 - `in_interface_list` (String) Set of interfaces defined in interface list. Works the same as in-interface.
 - `ingress_priority` (Number) Matches the priority of an ingress packet. Priority may be derived from VLAN, WMM, DSCP, or MPLS EXP bit.
 - `ipsec_policy` (String) Matches the policy used by IPsec. Value is written in the following format: direction, policy.
+- `jump_target` (String) Name of the target chain to jump to. Applicable only if action=jump. Removing the attribute clears the previous target.
 - `limit` (String) Matches packets up to a limited rate (packet rate or bit rate). A rule using this matcher will match until this limit is reached. Parameters are written in the following format: rate[/time],burst:mode.
 - `log` (Boolean) Add a message to the system log.
 - `log_prefix` (String) Adds specified text at the beginning of every log message. Applicable if action=log or log=yes configured.

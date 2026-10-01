@@ -15,6 +15,7 @@ import (
   {
     ".id": "*0",
     ".nextid": "*1",
+    "actual-path-cost": "10",
     "auto-isolate": "false",
     "bpdu-guard": "false",
     "bridge": "bridge",
@@ -91,6 +92,11 @@ func ResourceInterfaceBridgePort() *schema.Resource {
 		"nextid": {
 			Type:     schema.TypeString,
 			Computed: true,
+		},
+		"actual_path_cost": {
+			Type:        schema.TypeInt,
+			Computed:    true,
+			Description: "Shows the actual port path-cost. Either manually applied or automatically determined based on the interface speed and the port-cost-mode setting.",
 		},
 		"auto_isolate": {
 			Type:     schema.TypeBool,
@@ -421,6 +427,13 @@ func ResourceInterfaceBridgePort() *schema.Resource {
 			Description: "When enabled, it allows to forward DHCP packets towards DHCP server through this port. " +
 				"Mainly used to limit unauthorized servers to provide malicious information for users. " +
 				"This property only has effect when dhcp-snooping is set to yes.",
+			DiffSuppressFunc: AlwaysPresentNotUserProvided,
+		},
+		"trusted_ra": {
+			Type:             schema.TypeBool,
+			Optional:         true,
+			Computed:         true,
+			Description:      "Whether to trust IPv6 Router Advertisements received on this port. Available in RouterOS starting from version 7.22.",
 			DiffSuppressFunc: AlwaysPresentNotUserProvided,
 		},
 		"unknown_multicast_flood": {

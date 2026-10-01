@@ -1,13 +1,8 @@
-# Terraform Provider RouterOS
+# manchtools RouterOS provider
 
-![module testing workflow](https://github.com/GNewbury1/terraform-provider-routeros/actions/workflows/release.yml/badge.svg?branch=main)
+A Bogon-focused fork of [terraform-routeros/terraform-provider-routeros](https://github.com/terraform-routeros/terraform-provider-routeros), based on upstream main at `0d8c069c20a012300dfeeb96cb343ad7a5e7ebfb`.
 
-**Note**: In release 1.43, the resource schemas have been changed:
-* `routeros_routing_bgp_connection`
-* `routeros_ipv6_neighbor_discovery`
-* `routeros_interface_wireguard_peer`
-
-For the first two to work correctly, you must remove the resource state (`terraform state rm <name>`) and import it again (`terraform import [options] <name> <id>`).
+The source address is `manchtools/routeros`. Bogon builds version `1.99.1-bogon.4` into a local OpenTofu filesystem mirror; this fork has no registry publication or signed release pipeline. See [BOGON.md](BOGON.md) for scope, upstream contributions and verification limits.
 
 ## Purpose
 
@@ -25,7 +20,7 @@ To get started with the provider, you first need to enable the REST API on your 
 terraform {
   required_providers {
     routeros = {
-      source = "terraform-routeros/routeros"
+      source = "manchtools/routeros"
     }
   }
 }
@@ -42,7 +37,7 @@ For more in-depth documentation about each of the resources and datasources, ple
 
 ### Versions tested
 
-- go 1.24.2 and ROS 7.12, 7.15, 7.16 (stable)
+- Go 1.25; isolated REST lifecycle contracts cover RouterOS 7.21.5, 7.22.3, 7.23.7 and 7.24.5. Physical MLAG and radio traffic require hardware verification.
 
 ## Changelog
 

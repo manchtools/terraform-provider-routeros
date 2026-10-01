@@ -89,7 +89,7 @@ func ResourceWifiProvisioning() *schema.Resource {
 			Optional: true,
 			Elem: &schema.Schema{
 				Type:         schema.TypeString,
-				ValidateFunc: validation.StringInSlice([]string{"2ghz-ax", "2ghz-g", "2ghz-n", "5ghz-a", "5ghz-ac", "5ghz-ax", "5ghz-n"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"2ghz-ax", "2ghz-g", "2ghz-n", "5ghz-a", "5ghz-ac", "5ghz-ax", "5ghz-n", "6ghz-ax"}, false),
 			},
 			Description: "Match CAPs by supported modes.",
 		},

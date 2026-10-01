@@ -1,0 +1,38 @@
+# Bogon fork scope and review
+
+This fork builds `manchtools/routeros` version `1.99.1-bogon.4` for Bogon. The baseline is upstream main at `0d8c069c20a012300dfeeb96cb343ad7a5e7ebfb`. It keeps upstream history and the MPL 2.0 license. Bogon pins a commit and archive checksum, builds an unsigned executable and installs it through a local OpenTofu mirror. Registry publication, signed releases and state migrations are deferred.
+
+## Reviewed upstream contributions
+
+These are selected patch integrations, with adaptations where needed, rather than unreviewed merges of entire contributor branches. All seven complete patches (46 file changes, 44 distinct files) and the selected PR #1009 mapping were read for correctness and security, including supporting serialization and lifecycle code. An independent review found no evidence of malicious changes: no added dependencies, external destinations, credential handling, executable hooks or elevated workflow permissions. This finding covers these revisions; it does not certify the full upstream backlog or dependencies.
+
+| Contribution | Reviewed head | Author | Decision |
+| --- | --- | --- | --- |
+| [#992](https://github.com/terraform-routeros/terraform-provider-routeros/pull/992) modern schemas | `7d6a7c590c2479adfdbf7d5a49cdcbd4f2d76330` | glitchedmob | Adapt MLAG and BGP behavior; retain related schema additions. |
+| [#984](https://github.com/terraform-routeros/terraform-provider-routeros/pull/984) address VRF | `27d180cb568675b1cf638aaff8051c6397abacc2` | SolAstrius | Accept computed-only VRF. |
+| [#985](https://github.com/terraform-routeros/terraform-provider-routeros/pull/985) DHCP defaults | `dd1c8b2ec6ea485f3cdf4831885f85cc455c5042` | SolAstrius | Accept preservation of omitted identifiers and prefix pool. |
+| [#1003](https://github.com/terraform-routeros/terraform-provider-routeros/pull/1003) IPv6 address lists | `02f74bf5a933e4ba2e70c8776d4065b352a20560` | simonostendorf | Accept filter and datasource fields. |
+| [#1013](https://github.com/terraform-routeros/terraform-provider-routeros/pull/1013) comparison failures | `f5c736e928575962e9f59801926fc947b069c3c4` | toelke | Accept returning a diff rather than panicking on malformed values. |
+| [#1014](https://github.com/terraform-routeros/terraform-provider-routeros/pull/1014) lowercase kilo | `47ccfe6d1dd00cad98a1d0dfd41cb2443a0a7c5c` | toelke | Accept parser change and tests. |
+| [#980](https://github.com/terraform-routeros/terraform-provider-routeros/pull/980) bridge port path cost | `495311d40311d940d3a85c0642f306aaf39f7fac` | chramb | Accept computed-only observation. |
+| [#1009](https://github.com/terraform-routeros/terraform-provider-routeros/pull/1009) service rename | `fa03e6c1df1c60be40b9a460174112d364f55937` | aaronmgn | Select only the RouterOS 7.24 `address` → `available-from` mapping. |
+
+PR #992's singleton MLAG calls used ordinary CRUD and would fail on legacy firmware. Its BGP additions also left the legacy `add_path_out=none` default writable, causing unsupported writes on newer firmware. The fork corrects both and bounds version parsing to avoid an inherited malformed-version panic. BGP examples and docs reflect the computed-only legacy field.
+
+PRs #1004 and the remaining #1009 changes are excluded because they suppress ownership of writable MLAG/RA settings. #983 changes service IDs without upgrading existing state. #894's WiFi clearing addresses API only. #1007 makes unrelated schema breaks; #977 bulk caching is deferred. These exclusions are correctness and scope decisions, not claims of malicious intent. Remaining PRs require review before inclusion.
+
+## Bogon fixes
+
+- A dedicated `routeros_bridge_mlag` owns peer settings on both legacy singleton menus and modern bridges. Refresh detects drift; destroy disables MLAG and preserves the bridge. The bridge resource does not replay MLAG properties. Retaining separate ownership avoids the bridge/peer-port dependency cycle.
+- IPv6 mangle accepts `jump_target`, allowing owned jump chains.
+- WiFi datapath updates explicitly unset omitted bridge, VLAN and forwarding overrides, preserve native identity and support retry after partial failure. Explicit values remain distinct from omission.
+- CAPsMAN destroy disables and verifies the singleton, retaining state on failure and preserving certificates/radios.
+- Existing Bogon route blackhole normalization and 6 GHz validation are retained; address VRF and legacy BGP observations remain read-only.
+
+Router-owned DHCP-PD callbacks and HA election hooks remain necessary for autonomous behavior between applies.
+
+## Verification and limits
+
+Offline Go tests, schema validation, vet, race checks for Bogon regressions and build pass. Regression tests cover the selected DHCP, address-list, parser and diff-comparison fixes. REST lifecycle fixtures cover MLAG on 7.21.5, 7.22.3, 7.23.7 and 7.24.5, WiFi omission/retry and CAPsMAN failure paths. An in-memory API connection verifies unset command encoding. Bogon tests use the actual built provider and OpenTofu 1.13.0; the MLAG test exercises apply, unchanged plan, native priority drift, correction and destroy.
+
+These are API contract fixtures, not live RouterOS acceptance tests. Physical MLAG failover, radio traffic and native WiFi unset/default visibility remain unverified. Current [MLAG documentation](https://help.mikrotik.com/docs/spaces/ROS/pages/67633179/Multi-chassis+Link+Aggregation+Group), [WiFi CLI reference](https://manual.mikrotik.com/docs/cli-reference/interface/wifi/datapath/) and [RouterOS changelogs](https://mikrotik.com/download/changelogs) describe the relevant interfaces. Newer versions should be checked against native observations before deployment.

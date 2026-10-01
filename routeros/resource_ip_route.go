@@ -3,6 +3,7 @@ package routeros
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"maps"
 )
 
 // ResourceIPRoute
@@ -142,4 +143,24 @@ func ResourceIPRoute() *schema.Resource {
 
 		Schema: resSchema,
 	}
+}
+
+// RouterOS represents blackhole as an empty presence flag in route responses.
+// Keep this adaptation local to routes; empty values on other boolean fields
+// retain their existing meaning. Clone the response rather than mutating it.
+func normalizeRouteBlackhole(item MikrotikItem, path string) MikrotikItem {
+	if path != "/ip/route" && path != "/ipv6/route" {
+		return item
+	}
+	normalized := maps.Clone(item)
+	if normalized == nil {
+		normalized = MikrotikItem{}
+	}
+	value, present := normalized["blackhole"]
+	if !present {
+		normalized["blackhole"] = "false"
+	} else if value == "" {
+		normalized["blackhole"] = "true"
+	}
+	return normalized
 }

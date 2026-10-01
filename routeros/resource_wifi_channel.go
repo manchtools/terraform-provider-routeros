@@ -29,7 +29,7 @@ func ResourceWifiChannel() *schema.Resource {
 			Optional:    true,
 			Description: "Frequency band and wireless standard that will be used by the AP. ",
 			ValidateFunc: validation.StringInSlice([]string{"2ghz-g", "2ghz-n", "2ghz-ax", "5ghz-a", "5ghz-ac", "5ghz-ax",
-				"5ghz-an", "5ghz-n"}, false),
+				"5ghz-an", "5ghz-n", "6ghz-ax"}, false),
 		},
 		KeyComment: PropCommentRw,
 		"deprioritize_unii_3_4": {

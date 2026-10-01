@@ -11,7 +11,7 @@ const testInterfaceWireless = "routeros_interface_wireless.test"
 
 func TestAccInterfaceWirelessTest_basic(t *testing.T) {
 	t.Logf("A device with WiFi interface is required for the test")
-	return
+	t.Skip("requires a physical wireless device")
 
 	for _, name := range testNames {
 		t.Run(name, func(t *testing.T) {

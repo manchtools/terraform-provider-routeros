@@ -59,6 +59,9 @@ func newRestClient(ctx context.Context, hostUrl, user, pass string) *RestClient 
 }
 
 func TestClientTransport_SendRequest(t *testing.T) {
+	if os.Getenv("TF_ACC") != "1" {
+		t.Skip("set TF_ACC=1 to run live RouterOS transport tests")
+	}
 	testAccPreCheck(t)
 	ctx := context.Background()
 	host := reHost.FindStringSubmatch(os.Getenv("ROS_HOSTURL"))[1]

@@ -1,94 +1,21 @@
-name: Go Client Tests
+name: Provider checks
 on:
+  push:
+    branches: [bogon]
   pull_request:
-    branches:
-      - 'main'
-      - 'devel'
-    paths:
-      - 'main.go'
-      - 'routeros/*.go'
-      - '.github/workflows/*.yml'
+    branches: [bogon]
+permissions:
+  contents: read
 jobs:
-  build:
-    name: Build
-    runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.experimental }}
-    strategy:
-      matrix:
-        experimental: [false]
-        os: [ubuntu-latest]
-        routeros_version:
-          - "7.12"
-          - "7.15"
-          - "7.16"
-
+  test:
+    runs-on: ubuntu-latest
     steps:
-      - name: Container check
-        run: |
-          echo "Wait for the container to finish launching..."
-          while true; do
-            docker logs ${{ job.services.routeros.id }} 2>&1 | grep MikroTik && break
-            # docker logs ${{ job.services.routeros.id }} 2>&1
-            echo "waiting..."
-            sleep 10
-          done
-
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v6
-
-      - name: Cache restore
-        uses: actions/cache/restore@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
         with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
-      - name: Setup Go environment
-        uses: actions/setup-go@v6
-        with:
-          go-version: 1.25
-        id: go  
-  
-      - name: Get dependencies
-        run: | 
-          go mod download
-
-      - name: Build
-        run: go build -v .
-
-      - name: Preparing RouterOS for testing
-        run: |
-          go run .github/scripts/setup_routeros.go
-        env:
-          ROS_USERNAME: admin
-          ROS_PASSWORD: ''
-          ROS_IP_ADDRESS: 127.0.0.1
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v4
-
-      - name: Run client tests
-        run: go test -timeout 30m -v ./routeros
-        env:
-          ROS_HOSTURL: https://127.0.0.1
-          ROS_USERNAME: admin
-          ROS_PASSWORD: ''
-          ROS_INSECURE: true
-          TF_ACC: 1
-          ROS_VERSION: ${{ matrix.routeros_version }}
-
-    services:
-      routeros:
-        image: vaerhme/routeros:v${{ matrix.routeros_version }}
-        ports:
-          - 443:443
-          - 8728:8728
-          - 8729:8729
-        options: >-
-          --cap-add=NET_ADMIN
-          --entrypoint /routeros/entrypoint_with_four_interfaces.sh
-          --device /dev/net/tun
-          --device /dev/kvm
+          go-version-file: go.mod
+          cache: true
+      - run: go test -mod=readonly ./...
+      - run: go test -mod=readonly -race ./routeros -run '^TestBogon'
+      - run: go vet ./...
+      - run: go build -mod=readonly .

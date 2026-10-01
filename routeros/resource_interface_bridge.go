@@ -10,6 +10,7 @@ func ResourceInterfaceBridge() *schema.Resource {
 	resSchema := map[string]*schema.Schema{
 		MetaResourcePath: PropResourcePath("/interface/bridge"),
 		MetaId:           PropId(Id),
+		MetaSkipFields:   PropSkipFields("mlag_heartbeat", "mlag_peer_port", "mlag_priority"),
 
 		KeyActualMtu: PropActualMtuRo,
 		"add_dhcp_option82": {
@@ -272,6 +273,12 @@ func ResourceInterfaceBridge() *schema.Resource {
 			RequiredWith:     []string{"igmp_snooping", "multicast_querier"},
 		},
 		KeyRunning: PropRunningRo,
+		"ra_guard": {
+			Type:             schema.TypeBool,
+			Optional:         true,
+			Description:      "Whether to enable IPv6 Router Advertisement guard on the bridge. Available in RouterOS starting from version 7.22.",
+			DiffSuppressFunc: AlwaysPresentNotUserProvided,
+		},
 		"region_name": {
 			Type:        schema.TypeString,
 			Optional:    true,

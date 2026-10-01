@@ -31,7 +31,7 @@ func ResourceIPv6FirewallMangle() *schema.Resource {
 		MetaId:           PropId(Id),
 		MetaSkipFields:   PropSkipFields("bytes", "packets"),
 		MetaSetUnsetFields: PropSetUnsetFields("dst_address_list", "src_address_list", "in_interface", "in_interface_list",
-			"out_interface", "out_interface_list", "in_bridge_port_list", "out_bridge_port_list"),
+			"out_interface", "out_interface_list", "in_bridge_port_list", "out_bridge_port_list", "jump_target"),
 
 		"action": {
 			Type:        schema.TypeString,
@@ -201,6 +201,11 @@ func ResourceIPv6FirewallMangle() *schema.Resource {
 			Description: "Matches the policy used by IPsec. Value is written in the following format: direction, policy.",
 			ValidateFunc: validation.StringMatch(regexp.MustCompile(`^(in|out)\s?,\s?(ipsec|none)$`),
 				"Value must be written in the following format: direction, policy."),
+		},
+		"jump_target": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Name of the target chain to jump to. Applicable only if action=jump. Removing the attribute clears the previous target.",
 		},
 		"limit": {
 			Type:     schema.TypeString,

@@ -28,6 +28,9 @@ provider "routeros" {
 `
 
 func init() {
+	if os.Getenv("TF_ACC") != "1" {
+		RouterOSVersion = "7.24.5"
+	}
 	testAccProvider = Provider()
 	testAccProviderFactories = map[string]func() (*schema.Provider, error){
 		"routeros": func() (*schema.Provider, error) {
