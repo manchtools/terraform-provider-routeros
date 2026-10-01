@@ -37,7 +37,7 @@ For more in-depth documentation about each of the resources and datasources, ple
 
 ### Versions tested
 
-- Go 1.25; isolated REST lifecycle contracts cover RouterOS 7.21.5, 7.22.3, 7.23.7 and 7.24.5. Physical MLAG and radio traffic require hardware verification.
+- Go 1.26.6 or newer; isolated REST lifecycle contracts cover RouterOS 7.21.5, 7.22.3, 7.23.7 and 7.24.5. [Live verification](LIVE_VERIFICATION.md) covers the additional fixes on RouterOS 7.24.2. Physical MLAG and radio traffic require hardware verification.
 
 ## Changelog
 

@@ -43,3 +43,11 @@ An imported WiFi configuration referenced a datapath profile providing a bridge 
 The fix uses direct config reads for WiFi interfaces and configurations, writes only explicitly configured map keys, and unsets removed direct map fields/references. Live tests detected and removed the baseline's frozen bridge/VLAN overrides, confirmed a parent VLAN change propagated through another unrelated update, switched the profile reference, applied an explicit VLAN override and removed it to restore inheritance, then removed the entire reference. State contained direct map values only and final plans were empty. All profile/bridge probes were removed.
 
 REST fixtures exercise both resource callbacks, JSON query arrays, create/read/update, map/reference removal and failure ownership. CHR has no radios: native profile behavior is verified, while physical interface lifecycle and radio traffic remain unverified.
+
+## Dependency security refresh
+
+Baseline `govulncheck` reported six findings with reachable symbols in the provider entry point and thirteen across the repository including its SSH importer tool. This establishes call reachability, not exploitability in a Bogon deployment.
+
+The update selects gRPC 1.83.2, x/crypto 0.56.0, x/net 0.58.0, x/text 0.41.0 and x/mod 0.40.0, with their required transitive updates. The provider requires Go 1.26.6 or newer; the live test build uses Go 1.26.8. Bogon's Docker builder already uses Go 1.26. Provider tests, vet, race checks and module verification pass. The updated executable also passed live IPv6 create/comment/address updates and rule-ordering create/update/cleanup checks.
+
+The final scan reports no affected imported packages or reachable symbols. One module-only advisory remains for the unused, deprecated `golang.org/x/crypto/openpgp` package, which has no fixed version; no OpenPGP package is imported by this repository. See the [Go advisory](https://pkg.go.dev/vuln/GO-2026-5932). Dependency verification and scans are not a complete audit of every upstream dependency change.
