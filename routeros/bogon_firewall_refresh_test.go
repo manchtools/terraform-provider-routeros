@@ -21,6 +21,9 @@ func TestBogonFirewallClearedSelectors(t *testing.T) {
 			t.Run(path+"/"+outcome, func(t *testing.T) {
 				config := map[string]interface{}{"action": "accept", "chain": "bogon-probe", "log_prefix": "keep"}
 				fields := loadSkipFields(res.Schema[MetaSetUnsetFields].Default.(string))
+				for _, field := range []string{"src_address", "dst_address", "in_interface", "out_interface", "protocol"} {
+					fields[field] = struct{}{}
+				}
 				for field := range fields {
 					if res.Schema[field].Type == schema.TypeString {
 						config[field] = "previous"

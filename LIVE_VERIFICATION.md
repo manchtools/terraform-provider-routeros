@@ -24,6 +24,8 @@ Seven disabled rules in an isolated chain covered IPv4 filter, mangle, NAT and r
 
 The fix normalizes missing optional string fields explicitly registered as unsettable, only after a successful complete firewall resource read. The updated plan detected all seven changes, apply restored every native selector, the following plan was empty, and destroy removed every probe rule. Regression tests cover absent/present selectors and failed reads on all seven schemas; failed reads retain previous state and IDs.
 
+A follow-up found incomplete unset metadata: IPv6 address selectors and filter interfaces, plus IPv4/IPv6 mangle and NAT protocols, could remain stale. An explicit regression matrix failed before expanding those declarations. Live tests removed source/destination addresses, input/output interfaces and protocol from all seven disabled rules. The fixed provider detected and restored every selector, then removal from configuration unset them natively; both final plans were empty and all rules were destroyed. This covers those selectors and the registered unsettable fields, not every optional firewall property.
+
 ## Omitted and inherited BGP blocks
 
 Disabled native BGP connections and templates were imported with input/output/local/remote blocks omitted from configuration. An unrelated update crashed the baseline provider. Guarding serialization alone stopped the crash but left perpetual removal diffs; live testing also exposed stale state when an entire native block disappeared.
