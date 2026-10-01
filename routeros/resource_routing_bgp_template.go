@@ -118,6 +118,7 @@ func ResourceRoutingBgpTemplate() *schema.Resource {
 		"input": {
 			Type:        schema.TypeList,
 			Optional:    true,
+			Computed:    true,
 			Description: "A group of parameters associated with BGP input.",
 			MaxItems:    1,
 			Elem: &schema.Resource{
@@ -320,6 +321,7 @@ func ResourceRoutingBgpTemplate() *schema.Resource {
 		"output": {
 			Type:        schema.TypeList,
 			Optional:    true,
+			Computed:    true,
 			Description: "A group of parameters associated with BGP output.",
 			MaxItems:    1,
 			Elem: &schema.Resource{

@@ -133,6 +133,7 @@ func ResourceRoutingBgpConnection() *schema.Resource {
 		"input": {
 			Type:        schema.TypeList,
 			Optional:    true,
+			Computed:    true,
 			Description: "A group of parameters associated with BGP input.",
 			MaxItems:    1,
 			Elem: &schema.Resource{
@@ -321,6 +322,7 @@ func ResourceRoutingBgpConnection() *schema.Resource {
 		"local": {
 			Type:        schema.TypeList,
 			Optional:    true,
+			Computed:    true,
 			Description: "A group of parameters associated with BGP input.",
 			MaxItems:    1,
 			Elem: &schema.Resource{
@@ -401,6 +403,7 @@ func ResourceRoutingBgpConnection() *schema.Resource {
 		"output": {
 			Type:        schema.TypeList,
 			Optional:    true,
+			Computed:    true,
 			Description: "A group of parameters associated with BGP output.",
 			MaxItems:    1,
 			Elem: &schema.Resource{
@@ -506,6 +509,7 @@ func ResourceRoutingBgpConnection() *schema.Resource {
 		"remote": {
 			Type:        schema.TypeList,
 			Optional:    true,
+			Computed:    true,
 			Description: "A group of parameters associated with BGP input.",
 			MaxItems:    1,
 			Elem: &schema.Resource{

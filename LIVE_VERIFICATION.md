@@ -23,3 +23,9 @@ The fix compares parsed full addresses and prefix lengths when neither EUI-64 no
 Seven disabled rules in an isolated chain covered IPv4 filter, mangle, NAT and raw, and IPv6 filter, mangle and NAT. Native `/unset` removed each rule's `src-address-list`; native reads confirmed the key was absent. The previous provider incorrectly reported no changes.
 
 The fix normalizes missing optional string fields explicitly registered as unsettable, only after a successful complete firewall resource read. The updated plan detected all seven changes, apply restored every native selector, the following plan was empty, and destroy removed every probe rule. Regression tests cover absent/present selectors and failed reads on all seven schemas; failed reads retain previous state and IDs.
+
+## Omitted and inherited BGP blocks
+
+Disabled native BGP connections and templates were imported with input/output/local/remote blocks omitted from configuration. An unrelated update crashed the baseline provider. Guarding serialization alone stopped the crash but left perpetual removal diffs; live testing also exposed stale state when an entire native block disappeared.
+
+The fix checks empty, null and unknown nested values, skips unconfigured inherited blocks, marks inheritable BGP blocks optional/computed, and clears absent groups after complete native reads. Live tests updated comments without materializing inherited output overrides, then removed a parent's filter and confirmed both children followed it. Refresh removed the absent output from state. Explicit output blocks were subsequently applied, native removal was detected and corrected, the final plan was empty, and all owned BGP/filter probes were removed. Regression tests cover omitted inherited blocks, explicitly configured output and absent-block refresh. Omitting a block leaves its native settings unmanaged; it does not promise to erase every previous direct override.

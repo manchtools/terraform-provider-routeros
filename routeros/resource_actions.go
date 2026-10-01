@@ -253,6 +253,25 @@ func ResourceRead(ctx context.Context, s map[string]*schema.Schema, d *schema.Re
 	d.SetId((*res)[0].GetID(metadata.IdType))
 
 	item := (*res)[0]
+	if metadata.Path == "/routing/bgp/connection" || metadata.Path == "/routing/bgp/template" {
+		for _, group := range []string{"input", "output", "local", "remote"} {
+			if _, supported := s[group]; !supported {
+				continue
+			}
+			present := false
+			for native := range item {
+				if strings.HasPrefix(native, group+".") {
+					present = true
+					break
+				}
+			}
+			if !present {
+				if err := d.Set(group, []interface{}{}); err != nil {
+					return diag.FromErr(err)
+				}
+			}
+		}
+	}
 	// A complete firewall read omits unset selectors. Clear only fields that
 	// this resource explicitly supports unsetting, preserving other defaults
 	// and avoiding resets when processing partial write responses.

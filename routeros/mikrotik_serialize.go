@@ -248,13 +248,25 @@ func TerraformResourceDataToMikrotik(s map[string]*schema.Schema, d *schema.Reso
 
 			case *schema.Resource:
 
-				// skip if object is empty
-				if value.([]interface{})[0] == nil {
+				blocks, ok := value.([]interface{})
+				if !ok || len(blocks) == 0 || blocks[0] == nil {
 					continue
 				}
 
-				list := value.([]interface{})[0].(map[string]interface{})
-				ctyList := rawConfig.GetAttr(terraformSnakeName).AsValueSlice()[0]
+				configured := rawConfig.GetAttr(terraformSnakeName)
+				if configured.IsNull() || !configured.IsKnown() || configured.LengthInt() == 0 {
+					// Native refresh can populate an inherited block that the
+					// user did not configure. Do not replay it as an override.
+					continue
+				}
+				ctyList := configured.AsValueSlice()[0]
+				if ctyList.IsNull() || !ctyList.IsKnown() {
+					continue
+				}
+				list, ok := blocks[0].(map[string]interface{})
+				if !ok {
+					continue
+				}
 
 				for fieldName, value := range list {
 					// "output.0.affinity"
