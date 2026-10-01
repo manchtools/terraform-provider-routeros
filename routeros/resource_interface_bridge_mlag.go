@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"strconv"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -40,8 +41,11 @@ func ResourceInterfaceBridgeMlag() *schema.Resource {
 			if diags.HasError() {
 				return diags
 			}
-			if d.Id() != "" && (d.Get("peer_port").(string) != "none" || d.Get("priority").(int) != 128 || !TimeEqual("heartbeat", d.Get("heartbeat").(string), "5s", d)) {
-				return diag.Errorf("MLAG reset could not be verified")
+			if d.Id() != "" {
+				heartbeat, err := ParseDuration(d.Get("heartbeat").(string), time.Second)
+				if err != nil || heartbeat != 5*time.Second || d.Get("peer_port").(string) != "none" || d.Get("priority").(int) != 128 {
+					return diag.Errorf("MLAG reset could not be verified")
+				}
 			}
 			d.SetId("")
 			return diags

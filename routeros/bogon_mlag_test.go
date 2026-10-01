@@ -3,6 +3,8 @@ package routeros
 import (
 	"context"
 	"encoding/json"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -100,6 +102,15 @@ func TestBogonMLAGLifecycle(t *testing.T) {
 				t.Fatal("failed teardown discarded managed MLAG state")
 			}
 			failWrite = false
+			// Destroy carries a null raw configuration in the SDK.
+			previousData := d
+			d = res.Data(&terraform.InstanceState{RawConfig: cty.NullVal(res.CoreConfigSchema().ImpliedType())})
+			d.SetId(previousData.Id())
+			for _, key := range []string{"bridge", "peer_port", "priority", "heartbeat"} {
+				if err := d.Set(key, previousData.Get(key)); err != nil {
+					t.Fatal(err)
+				}
+			}
 			if diags := res.DeleteContext(context.Background(), d, client); diags.HasError() {
 				t.Fatal(diags)
 			}
