@@ -44,6 +44,7 @@ var (
 		crudStop:        "POST",
 		crudGenerateKey: "POST",
 		crudUnset:       "POST",
+		crudPrintConfig: "POST",
 	}
 )
 
@@ -57,9 +58,27 @@ func (c *RestClient) GetTransport() TransportType {
 
 func (c *RestClient) SendRequest(method crudMethod, url *URL, item MikrotikItem, result interface{}) error {
 	var data io.Reader
+	var payload interface{} = item
+	if method == crudPrintConfig {
+		// Print flags are command parameters, while record selection is a
+		// native query array in the JSON body. URL filters are ignored here.
+		fields := make(map[string]interface{}, len(item)+1)
+		for key, value := range item {
+			fields[key] = value
+		}
+		if len(url.Query) > 0 {
+			query := make([]string, len(url.Query))
+			for i, word := range url.Query {
+				query[i] = strings.TrimPrefix(word, "?")
+			}
+			fields[".query"] = query
+		}
+		payload = fields
+		url = &URL{Path: url.Path}
+	}
 
 	if item != nil {
-		b, err := json.Marshal(&item)
+		b, err := json.Marshal(payload)
 		if err != nil {
 			return err
 		}

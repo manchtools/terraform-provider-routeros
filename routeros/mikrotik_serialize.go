@@ -322,7 +322,21 @@ func TerraformResourceDataToMikrotik(s map[string]*schema.Schema, d *schema.Reso
 			}
 			item[mikrotikKebabName] = ListToString(value.(*schema.Set).List())
 		case schema.TypeMap:
+			var configuredKeys map[string]cty.Value
+			wifi := isWifiProfilePath(s[MetaResourcePath].Default.(string))
+			if wifi {
+				configured := rawConfig.GetAttr(terraformSnakeName)
+				if configured.IsNull() || !configured.IsKnown() {
+					continue
+				}
+				configuredKeys = configured.AsValueMap()
+			}
 			for k, v := range value.(map[string]interface{}) {
+				if wifi {
+					if _, specified := configuredKeys[k]; !specified {
+						continue
+					}
+				}
 				// channel + "." + config
 				k = SnakeToKebab(mikrotikKebabName + "." + k)
 				// Field transformation: "channel.config" ---> "channel".

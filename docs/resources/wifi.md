@@ -1,4 +1,6 @@
 # routeros_wifi (Resource)
+
+Inline profile maps contain direct settings only. Values inherited through a `config` reference remain managed by the referenced profile. Removing a map key unsets the direct override; removing `config` releases that profile reference.
 *<span style="color:red">This resource requires a minimum version of RouterOS 7.13.</span>*
 
 ## Example Usage

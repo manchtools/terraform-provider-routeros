@@ -36,6 +36,7 @@ var (
 		crudStop:        "/stop",
 		crudGenerateKey: "/generate-key",
 		crudUnset:       "/unset",
+		crudPrintConfig: "/print",
 	}
 )
 

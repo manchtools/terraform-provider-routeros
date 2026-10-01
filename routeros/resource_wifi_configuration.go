@@ -47,7 +47,6 @@ func ResourceWifiConfiguration() *schema.Resource {
 			Elem:             &schema.Schema{Type: schema.TypeString},
 			Description:      "AAA inline settings.",
 			ValidateDiagFunc: ValidationMapKeyNames,
-			DiffSuppressFunc: AlwaysPresentNotUserProvided,
 		},
 		"antenna_gain": {
 			Type:         schema.TypeInt,
@@ -76,7 +75,6 @@ func ResourceWifiConfiguration() *schema.Resource {
 			Elem:             &schema.Schema{Type: schema.TypeString},
 			Description:      "Channel inline settings.",
 			ValidateDiagFunc: ValidationMapKeyNames,
-			DiffSuppressFunc: AlwaysPresentNotUserProvided,
 		},
 		KeyComment: PropCommentRw,
 		"country": {
@@ -90,7 +88,6 @@ func ResourceWifiConfiguration() *schema.Resource {
 			Elem:             &schema.Schema{Type: schema.TypeString},
 			Description:      "Datapath inline settings.",
 			ValidateDiagFunc: ValidationMapKeyNames,
-			DiffSuppressFunc: AlwaysPresentNotUserProvided,
 		},
 		"deprioritize_unii_3_4": {
 			Type:     schema.TypeBool,
@@ -120,7 +117,6 @@ func ResourceWifiConfiguration() *schema.Resource {
 			Elem:             &schema.Schema{Type: schema.TypeString},
 			Description:      "Interworking inline settings.",
 			ValidateDiagFunc: ValidationMapKeyNames,
-			DiffSuppressFunc: AlwaysPresentNotUserProvided,
 		},
 		"manager": {
 			Type:         schema.TypeString,
@@ -153,7 +149,6 @@ func ResourceWifiConfiguration() *schema.Resource {
 			Elem:             &schema.Schema{Type: schema.TypeString},
 			Description:      "Security inline settings.",
 			ValidateDiagFunc: ValidationMapKeyNames,
-			DiffSuppressFunc: AlwaysPresentNotUserProvided,
 		},
 		"ssid": {
 			Type:        schema.TypeString,
@@ -166,7 +161,6 @@ func ResourceWifiConfiguration() *schema.Resource {
 			Elem:             &schema.Schema{Type: schema.TypeString},
 			Description:      "Steering inline settings.",
 			ValidateDiagFunc: ValidationMapKeyNames,
-			DiffSuppressFunc: AlwaysPresentNotUserProvided,
 		},
 		"tx_chains": {
 			Type:     schema.TypeSet,
@@ -187,9 +181,9 @@ func ResourceWifiConfiguration() *schema.Resource {
 
 	return &schema.Resource{
 		Description:   `*<span style="color:red">This resource requires a minimum version of RouterOS 7.13.</span>*`,
-		CreateContext: DefaultCreate(resSchema),
-		ReadContext:   DefaultRead(resSchema),
-		UpdateContext: DefaultUpdate(resSchema),
+		CreateContext: wifiDirectCreate(resSchema),
+		ReadContext:   wifiDirectRead(resSchema),
+		UpdateContext: wifiDirectUpdate(resSchema),
 		DeleteContext: DefaultDelete(resSchema),
 
 		Importer: &schema.ResourceImporter{

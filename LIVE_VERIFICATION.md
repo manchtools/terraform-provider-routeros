@@ -35,3 +35,11 @@ The fix checks empty, null and unknown nested values, skips unconfigured inherit
 The baseline accepted an empty sequence in an OpenTofu plan and crashed during apply. The fix places the two-item minimum on the list schema and rejects short sequences in both runtime write callbacks before sending a command. Tests against the baseline implementation reproduce the slice panic; fixed runtime tests reject empty and one-item sequences without native calls.
 
 Live OpenTofu plans reject both invalid lengths with a validation diagnostic. Three disabled IPv6 rules in an isolated chain were then ordered `a,b,c`, updated to `b,a,c`, and checked against native print order. Both subsequent plans were empty. Destroy removed every probe rule.
+
+## WiFi profile inheritance over REST
+
+An imported WiFi configuration referenced a datapath profile providing a bridge and VLAN. The baseline's unrelated comment update copied those inherited settings into direct overrides, confirmed using native `print config`. REST `POST .../print` with `config` and a JSON query array returns direct settings; GET flags and string/URL queries do not perform this selection reliably.
+
+The fix uses direct config reads for WiFi interfaces and configurations, writes only explicitly configured map keys, and unsets removed direct map fields/references. Live tests detected and removed the baseline's frozen bridge/VLAN overrides, confirmed a parent VLAN change propagated through another unrelated update, switched the profile reference, applied an explicit VLAN override and removed it to restore inheritance, then removed the entire reference. State contained direct map values only and final plans were empty. All profile/bridge probes were removed.
+
+REST fixtures exercise both resource callbacks, JSON query arrays, create/read/update, map/reference removal and failure ownership. CHR has no radios: native profile behavior is verified, while physical interface lifecycle and radio traffic remain unverified.

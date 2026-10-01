@@ -42,6 +42,7 @@ const (
 	crudStop
 	crudGenerateKey
 	crudUnset
+	crudPrintConfig
 )
 
 type ExtraParams struct {
