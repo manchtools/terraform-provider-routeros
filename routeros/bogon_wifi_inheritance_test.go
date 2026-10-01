@@ -80,7 +80,7 @@ func TestBogonWifiDirectProfileLifecycle(t *testing.T) {
 				d.Set("name", "probe")
 				d.Set("comment", "unrelated edit")
 				d.Set("datapath", map[string]interface{}{"config": "parent", "bridge": "previous-override", "vlan_id": "913"})
-				client := &RestClient{ctx: context.Background(), HostURL: server.URL, Transport: TransportREST, Client: server.Client()}
+				client := &RestClient{ctx: context.Background(), HostURL: server.URL, Client: server.Client()}
 				fn := res.ReadContext
 				if action == "create" {
 					fn = schema.ReadContextFunc(res.CreateContext)
@@ -134,7 +134,7 @@ func TestBogonWifiDirectFailuresRetainOwnership(t *testing.T) {
 			res := ResourceWifiConfiguration()
 			d := bogonResourceData(t, res, map[string]interface{}{"name": "probe"})
 			d.SetId("*1")
-			client := &RestClient{ctx: context.Background(), HostURL: server.URL, Transport: TransportREST, Client: server.Client()}
+			client := &RestClient{ctx: context.Background(), HostURL: server.URL, Client: server.Client()}
 			fn := res.UpdateContext
 			if failure == "create refresh" {
 				d.SetId("")

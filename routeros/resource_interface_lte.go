@@ -114,7 +114,7 @@ func ResourceInterfaceLte() *schema.Resource {
 	resCreateUpdate := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		res, err := ReadItems(&ItemId{Name, d.Get("name").(string)}, GetMetadata(resSchema).Path, m.(Client))
 		if err != nil {
-			// API/REST client error.
+			// REST client error.
 			ColorizedDebug(ctx, fmt.Sprintf(ErrorMsgPatch, err))
 			return diag.FromErr(err)
 		}

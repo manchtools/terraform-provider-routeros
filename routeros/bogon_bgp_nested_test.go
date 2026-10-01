@@ -45,7 +45,7 @@ func TestBogonBGPAbsentNestedBlockRefresh(t *testing.T) {
 				w.Write([]byte(`[{".id":"*1","name":"probe","as":"64512"}]`))
 			}))
 			defer server.Close()
-			client := &RestClient{ctx: context.Background(), HostURL: server.URL, Transport: TransportREST, Client: server.Client()}
+			client := &RestClient{ctx: context.Background(), HostURL: server.URL, Client: server.Client()}
 			if diags := res.ReadContext(context.Background(), d, client); diags.HasError() {
 				t.Fatal(diags)
 			}

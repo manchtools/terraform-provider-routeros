@@ -12,12 +12,11 @@ import (
 )
 
 type RestClient struct {
-	ctx       context.Context
-	HostURL   string
-	Username  string
-	Password  string
-	Transport TransportType
-	extra     *ExtraParams
+	ctx      context.Context
+	HostURL  string
+	Username string
+	Password string
+	extra    *ExtraParams
 	*http.Client
 }
 
@@ -50,10 +49,6 @@ var (
 
 func (c *RestClient) GetExtraParams() *ExtraParams {
 	return c.extra
-}
-
-func (c *RestClient) GetTransport() TransportType {
-	return c.Transport
 }
 
 func (c *RestClient) SendRequest(method crudMethod, url *URL, item MikrotikItem, result interface{}) error {

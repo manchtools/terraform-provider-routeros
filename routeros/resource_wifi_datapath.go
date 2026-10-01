@@ -160,10 +160,8 @@ func wifiDatapathUpdate(s map[string]*schema.Schema) schema.UpdateContextFunc {
 			if _, present := row[wireField]; !present {
 				continue
 			}
-			path := metadata.Path
-			if c.GetTransport() == TransportREST {
-				path += "/unset"
-			}
+			path := metadata.Path + "/unset"
+
 			if err := c.SendRequest(crudUnset, &URL{Path: path}, MikrotikItem{"numbers": id, "value-name": wireField}, nil); err != nil {
 				return diag.Errorf("Failed to unset WiFi datapath %s on %s: %s", wireField, id, err)
 			}
@@ -171,7 +169,7 @@ func wifiDatapathUpdate(s map[string]*schema.Schema) schema.UpdateContextFunc {
 		if _, err := UpdateItem(&ItemId{Id, id}, metadata.Path, item, c); err != nil {
 			return diag.FromErr(err)
 		}
-		// API set returns no configuration; read both transports after all commands.
+		// Refresh after all commands to observe effective settings and omissions.
 		return wifiDatapathRead(s)(ctx, d, c)
 	}
 }

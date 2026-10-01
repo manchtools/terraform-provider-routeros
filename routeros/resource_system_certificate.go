@@ -386,9 +386,8 @@ func ResourceSystemCertificate() *schema.Resource {
 
 		bl := attrBlock.(*schema.Set).List()[0].(map[string]interface{})
 		var resUrl = &URL{Path: resSchema[MetaResourcePath].Default.(string)}
-		if m.(Client).GetTransport() == TransportREST {
-			resUrl.Path += "/import"
-		}
+
+		resUrl.Path += "/import"
 
 		if data := bl["cert_file_content"].(string); data != "" {
 			// Validation
@@ -540,9 +539,8 @@ func ResourceSystemCertificate() *schema.Resource {
 		var resUrl = &URL{
 			Path: resSchema[MetaResourcePath].Default.(string),
 		}
-		if m.(Client).GetTransport() == TransportREST {
-			resUrl.Path += command
-		}
+
+		resUrl.Path += command
 
 		err := m.(Client).SendRequest(crudMethod, resUrl, params, nil)
 		if err != nil {
@@ -565,14 +563,12 @@ func ResourceSystemCertificate() *schema.Resource {
 			method = crudRevoke
 		}
 
-		if m.(Client).GetTransport() == TransportREST {
-			if _, ok := d.State().Attributes["ca"]; ok {
-				// Not Root CA.
-				resUrl.Path += "/issued-revoke"
-			} else {
-				// Root CA.
-				resUrl.Path += "/remove"
-			}
+		if _, ok := d.State().Attributes["ca"]; ok {
+			// Not Root CA.
+			resUrl.Path += "/issued-revoke"
+		} else {
+			// Root CA.
+			resUrl.Path += "/remove"
 		}
 
 		err := m.(Client).SendRequest(method, resUrl, item, nil)

@@ -131,16 +131,8 @@ func fileDelete(ctx context.Context, id string, m interface{}) diag.Diagnostics 
 		return diag.FromErr(errEmptyId)
 	}
 
-	url := &URL{Path: "/file"}
-
-	var data MikrotikItem
-
-	if m.(Client).GetTransport() == TransportREST {
-		url.Path += "/remove"
-		data = MikrotikItem{".id": id}
-	} else {
-		url.Query = []string{"=.id=" + id}
-	}
+	url := &URL{Path: "/file/remove"}
+	data := MikrotikItem{".id": id}
 
 	if err := m.(Client).SendRequest(crudRemove, url, data, nil); err != nil {
 		ColorizedDebug(ctx, fmt.Sprintf(ErrorMsgDelete, err))

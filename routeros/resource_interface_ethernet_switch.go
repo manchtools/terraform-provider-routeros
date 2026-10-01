@@ -208,10 +208,8 @@ func ResourceInterfaceEthernetSwitch() *schema.Resource {
 		}
 		item, metadata := TerraformResourceDataToMikrotik(resSchema, d)
 
-		var resUrl string
-		if m.(Client).GetTransport() == TransportREST {
-			resUrl = "/set"
-		}
+		resUrl := "/set"
+
 		item[".id"] = d.Id()
 
 		err := m.(Client).SendRequest(crudPost, &URL{Path: metadata.Path + resUrl}, item, nil)

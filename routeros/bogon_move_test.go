@@ -11,7 +11,6 @@ import (
 type bogonMoveClient struct{ calls int }
 
 func (c *bogonMoveClient) GetExtraParams() *ExtraParams { return &ExtraParams{} }
-func (c *bogonMoveClient) GetTransport() TransportType  { return TransportREST }
 func (c *bogonMoveClient) SendRequest(_ crudMethod, _ *URL, _ MikrotikItem, _ interface{}) error {
 	c.calls++
 	return nil

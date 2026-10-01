@@ -2,11 +2,11 @@
 
 A Bogon-focused fork of [terraform-routeros/terraform-provider-routeros](https://github.com/terraform-routeros/terraform-provider-routeros), based on upstream main at `0d8c069c20a012300dfeeb96cb343ad7a5e7ebfb`.
 
-The source address is `manchtools/routeros`. Bogon builds version `1.99.1-bogon.5` into a local OpenTofu filesystem mirror; this fork has no registry publication or signed release pipeline. See [BOGON.md](BOGON.md) for scope, upstream contributions and verification limits.
+The source address is `manchtools/routeros`. Bogon builds version `1.99.1-bogon.6` into a local OpenTofu filesystem mirror; this fork has no registry publication or signed release pipeline. See [BOGON.md](BOGON.md) for scope, upstream contributions and verification limits.
 
 ## Purpose
 
-This provider allows you to configure Mikrotik routers using [old API](https://help.mikrotik.com/docs/display/ROS/API) or [REST API](https://help.mikrotik.com/docs/display/ROS/REST+API), using or not using TLS.
+This fork configures MikroTik routers through the [REST API](https://help.mikrotik.com/docs/display/ROS/REST+API) over HTTP or HTTPS. Binary `api://` and `apis://` transports were removed in `1.99.1-bogon.6`; replace those provider endpoints with the router’s REST URL. Bare hosts default to HTTPS, and a trailing `/rest` is optional. Resource names, IDs and state schemas are unchanged.
 Compatibility testing is only performed within ROS version 7.x.
 
 From version 1.0.0, the provider has been rewritten by [vaerh](https://github.com/vaerh), and their [fork](https://github.com/vaerh/terraform-provider-routeros) has now been merged. This version drastically improves adding new endpoints to the provider, enabling significantly easier development. [vaerh](https://github.com/vaerh) has been added as a maintainer to this project.
@@ -14,7 +14,7 @@ From version 1.0.0, the provider has been rewritten by [vaerh](https://github.co
 _We are not affiliated in any way with Mikrotik or the development of RouterOS_
 ## Using the provider
 
-To get started with the provider, you first need to enable the REST API on your router. [You can follow the Mikrotik documentation on this](https://help.mikrotik.com/docs/display/ROS/REST+API), but the gist is to create an SSL cert (in `/system/certificates`) and enable the `web-ssl` service (in `/ip/services`) which uses that certificate. After that, include the following in your Terraform manifests:
+To get started with the provider, you first need to enable the REST API on your router. [You can follow the Mikrotik documentation on this](https://help.mikrotik.com/docs/display/ROS/REST+API), but the gist is to create an SSL cert (in `/system/certificates`) and enable the `www-ssl` service (in `/ip/service`) which uses that certificate. After that, include the following in your Terraform manifests:
 
 ```terraform
 terraform {
@@ -26,14 +26,14 @@ terraform {
 }
 
 provider "routeros" {
-  hosturl  = "(http|https|api|apis)://my.router.local[:port]"
+  hosturl  = "(http|https)://my.router.local[:port]"
   username = "my_username"
   password = "my_super_secret_password"
 }
 
 ```
 
-For more in-depth documentation about each of the resources and datasources, please read the [documentation on Hashicorp's Provider registry](https://registry.terraform.io/providers/terraform-routeros/routeros/latest/docs)
+Resource and data source documentation is in [docs/](docs/). The upstream registry documentation can differ from this fork.
 
 ### Versions tested
 

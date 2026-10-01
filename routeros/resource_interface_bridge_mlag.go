@@ -66,10 +66,8 @@ func ResourceInterfaceBridgeMlag() *schema.Resource {
 }
 
 func mlagBridge(d *schema.ResourceData, c Client) (MikrotikItem, error) {
-	name := d.Get("bridge").(string)
-	if c.GetTransport() == TransportREST {
-		name = url.QueryEscape(name)
-	}
+	name := url.QueryEscape(d.Get("bridge").(string))
+
 	rows, err := ReadItems(&ItemId{Type: Name, Value: name}, "/interface/bridge", c)
 	if err != nil {
 		return nil, err
@@ -143,10 +141,8 @@ func writeBridgeMlag(d *schema.ResourceData, c Client, reset bool) error {
 	if reset {
 		item["bridge"] = "none"
 	}
-	path := "/interface/bridge/mlag"
-	if c.GetTransport() == TransportREST {
-		path += "/set"
-	}
+	path := "/interface/bridge/mlag/set"
+
 	err = c.SendRequest(crudPost, &URL{Path: path}, item, nil)
 	if err == nil {
 		d.SetId("interface.bridge.mlag")

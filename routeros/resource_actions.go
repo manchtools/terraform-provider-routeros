@@ -21,7 +21,7 @@ func dynamicIdLookup(idType IdType, path string, c Client, d *schema.ResourceDat
 	// Dynamic lookup id.
 	res, err := ReadItems(&ItemId{idType, d.Id()}, path, c)
 	if err != nil {
-		// API/REST client error.
+		// REST client error.
 		return "", err
 	}
 
@@ -100,27 +100,6 @@ func ResourceCreate(ctx context.Context, s map[string]*schema.Schema, d *schema.
 	case Name:
 		// Resource ID.
 		d.SetId(item.GetID(Name))
-	}
-
-	// We ask for information again in the case of API.
-	if m.(Client).GetTransport() == TransportAPI {
-		r, err := ReadItems(&ItemId{Id, res.GetID(Id)}, metadata.Path, m.(Client))
-		if err != nil {
-			ColorizedDebug(ctx, fmt.Sprintf(ErrorMsgPut, err))
-			return diag.FromErr(err)
-		}
-
-		if len(*r) == 0 {
-			return diag.Diagnostics{
-				diag.Diagnostic{
-					Severity: diag.Error,
-					Summary: fmt.Sprintf("Mikrotik resource path='%v' id='%v' not found",
-						metadata.Path, res.GetID(Id)),
-				},
-			}
-		}
-
-		res = (*r)[0]
 	}
 
 	//spew.Dump(res)
@@ -207,27 +186,6 @@ func ResourceCreateAndWait(ctx context.Context, s map[string]*schema.Schema, d *
 	case Name:
 		// Resource ID.
 		d.SetId(item.GetID(Name))
-	}
-
-	// We ask for information again in the case of API.
-	if m.(Client).GetTransport() == TransportAPI {
-		r, err := ReadItems(&ItemId{Id, res.GetID(Id)}, metadata.Path, m.(Client))
-		if err != nil {
-			ColorizedDebug(ctx, fmt.Sprintf(ErrorMsgPut, err))
-			return diag.FromErr(err)
-		}
-
-		if len(*r) == 0 {
-			return diag.Diagnostics{
-				diag.Diagnostic{
-					Severity: diag.Error,
-					Summary: fmt.Sprintf("Mikrotik resource path='%v' id='%v' not found",
-						metadata.Path, res.GetID(Id)),
-				},
-			}
-		}
-
-		res = (*r)[0]
 	}
 
 	//spew.Dump(res)
@@ -366,12 +324,7 @@ func SystemResourceRead(ctx context.Context, s map[string]*schema.Schema, d *sch
 func SystemResourceCreateUpdate(ctx context.Context, s map[string]*schema.Schema, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	item, metadata := TerraformResourceDataToMikrotik(s, d)
 
-	var resUrl string
-	if m.(Client).GetTransport() == TransportREST {
-		// https://router/rest/system/identity/set
-		// https://router/rest/caps-man/manager/set
-		resUrl = "/set"
-	}
+	resUrl := "/set"
 
 	err := m.(Client).SendRequest(crudPost, &URL{Path: metadata.Path + resUrl}, item, nil)
 	if err != nil {

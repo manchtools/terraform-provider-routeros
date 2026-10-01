@@ -68,7 +68,7 @@ func TestBogonMLAGLifecycle(t *testing.T) {
 				}
 			}))
 			defer server.Close()
-			client := &RestClient{ctx: context.Background(), HostURL: server.URL, Client: server.Client(), Transport: TransportREST, extra: &ExtraParams{}}
+			client := &RestClient{ctx: context.Background(), HostURL: server.URL, Client: server.Client(), extra: &ExtraParams{}}
 			res := ResourceInterfaceBridgeMlag()
 			d := bogonResourceData(t, res, map[string]interface{}{"bridge": "bridge-site", "peer_port": "bond-peer", "heartbeat": "1s"})
 			_ = d.Set("priority", 50)
@@ -157,7 +157,7 @@ func TestBogonMLAGCreateRetainsOwnershipOnRefreshFailure(t *testing.T) {
 				_ = json.NewEncoder(w).Encode(row)
 			}))
 			defer server.Close()
-			c := &RestClient{ctx: context.Background(), HostURL: server.URL, Client: server.Client(), Transport: TransportREST, extra: &ExtraParams{}}
+			c := &RestClient{ctx: context.Background(), HostURL: server.URL, Client: server.Client(), extra: &ExtraParams{}}
 			res := ResourceInterfaceBridgeMlag()
 			d := bogonResourceData(t, res, map[string]interface{}{"bridge": "bridge-site", "peer_port": "bond-peer", "heartbeat": "5s"})
 			_ = d.Set("priority", 50)

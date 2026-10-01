@@ -129,9 +129,8 @@ func startScript(ctx context.Context, s map[string]*schema.Schema, d *schema.Res
 	var resUrl = &URL{
 		Path: s[MetaResourcePath].Default.(string),
 	}
-	if m.(Client).GetTransport() == TransportREST {
-		resUrl.Path += "/run"
-	}
+
+	resUrl.Path += "/run"
 
 	err := m.(Client).SendRequest(crudStart, resUrl, MikrotikItem{Id.String(): d.Id()}, nil)
 	if err != nil {

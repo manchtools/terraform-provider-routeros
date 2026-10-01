@@ -9,7 +9,7 @@ description: |-
 
 # RouterOS Provider
 
-To get started with the provider, you first need to enable the REST API on your router. [You can follow the Mikrotik documentation on this](https://help.mikrotik.com/docs/display/ROS/REST+API), but the gist is to create an SSL cert (in `/system/certificates`) and enable the `web-ssl` service (in `/ip/services`) which uses that certificate.
+To get started with the provider, you first need to enable the REST API on your router. [You can follow the Mikrotik documentation on this](https://help.mikrotik.com/docs/display/ROS/REST+API), but the gist is to create an SSL cert (in `/system/certificates`) and enable the `www-ssl` service (in `/ip/service`) which uses that certificate.
 
 
 ## Example Usage
@@ -18,7 +18,7 @@ To get started with the provider, you first need to enable the REST API on your 
 terraform {
   required_providers {
     routeros = {
-      source = "terraform-routeros/routeros"
+      source = "manchtools/routeros"
     }
   }
 }
@@ -28,7 +28,7 @@ provider "routeros" {
   username       = "admin"                       # env ROS_USERNAME or MIKROTIK_USER
   password       = ""                            # env ROS_PASSWORD or MIKROTIK_PASSWORD
   ca_certificate = "/path/to/ca/certificate.pem" # env ROS_CA_CERTIFICATE or MIKROTIK_CA_CERTIFICATE
-  insecure       = true                          # env ROS_INSECURE or MIKROTIK_INSECURE
+  insecure       = false                          # env ROS_INSECURE or MIKROTIK_INSECURE
 }
 
 resource "routeros_interface_gre" "gre_hq" {
@@ -43,18 +43,7 @@ resource "routeros_interface_gre" "gre_hq" {
 
 ### Required
 
-- `hosturl` (String) URL of the MikroTik router, default is TLS connection to REST.
-	* API: api[s]://host[:port]
-		* api://router.local
-		* apis://router.local:8729
-	* REST: http[s]://host
-		* http://router.local
-		* https://router.local
-		* router.local
-		* 127.0.0.1
-
-
-	export ROS_HOSTURL=router.local or export MIKROTIK_HOST=router.local
+- `hosturl` (String) RouterOS REST endpoint (http:// or https://). Bare hosts default to HTTPS; an optional trailing /rest is accepted. Binary api:// and apis:// transports are unsupported (env: ROS_HOSTURL | MIKROTIK_HOST).
 - `username` (String) Username for the MikroTik WEB/Winbox.
 
 

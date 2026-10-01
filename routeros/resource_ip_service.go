@@ -104,12 +104,7 @@ func ResourceIpService() *schema.Resource {
 
 		d.SetId(d.Get("numbers").(string))
 
-		var resUrl string
-		if m.(Client).GetTransport() == TransportREST {
-			// https://router/rest/system/identity/set
-			// https://router/rest/caps-man/manager/set
-			resUrl = "/set"
-		}
+		resUrl := "/set"
 
 		err := m.(Client).SendRequest(crudPost, &URL{Path: metadata.Path + resUrl}, item, nil)
 		if err != nil {

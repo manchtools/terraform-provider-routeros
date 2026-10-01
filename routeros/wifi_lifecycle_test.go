@@ -3,13 +3,8 @@ package routeros
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"net"
 	"net/http"
-	"time"
 
-	native "github.com/go-routeros/routeros/v3"
-	"github.com/go-routeros/routeros/v3/proto"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -133,7 +128,7 @@ func TestBogonWifiDatapathUnsetREST(t *testing.T) {
 				}
 			}))
 			defer server.Close()
-			client := &RestClient{ctx: context.Background(), HostURL: server.URL, Transport: TransportREST, extra: &ExtraParams{}, Client: server.Client()}
+			client := &RestClient{ctx: context.Background(), HostURL: server.URL, extra: &ExtraParams{}, Client: server.Client()}
 			prior := map[string]interface{}{"name": "profile", "bridge": "lan", "traffic_processing": "on-capsman", "vlan_id": 20}
 			d := wifiLifecycleData(t, res, map[string]interface{}{"name": "profile"}, prior)
 			d.SetId("*1")
@@ -215,7 +210,7 @@ func TestBogonWifiCapsmanDeleteREST(t *testing.T) {
 				w.WriteHeader(400)
 			}))
 			defer server.Close()
-			client := &RestClient{ctx: context.Background(), HostURL: server.URL, Transport: TransportREST, extra: &ExtraParams{}, Client: server.Client()}
+			client := &RestClient{ctx: context.Background(), HostURL: server.URL, extra: &ExtraParams{}, Client: server.Client()}
 			d := wifiLifecycleData(t, res, map[string]interface{}{"enabled": true}, nil)
 			d.SetId("interface.wifi.capsman")
 			diags := res.DeleteContext(context.Background(), d, client)
@@ -259,44 +254,6 @@ func TestBogonIPv6MangleJumpTargetRoundTrip(t *testing.T) {
 	}
 }
 
-// Exercise the actual API encoder over an in-memory connection, including the
-// command suffix and argument words used by the WiFi update path.
-func TestBogonWifiUnsetAPIWire(t *testing.T) {
-	clientConn, serverConn := net.Pipe()
-	defer clientConn.Close()
-	defer serverConn.Close()
-	_ = clientConn.SetDeadline(time.Now().Add(5 * time.Second))
-	_ = serverConn.SetDeadline(time.Now().Add(5 * time.Second))
-	nativeClient, err := native.NewClient(clientConn)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer nativeClient.Close()
-	done := make(chan error, 1)
-	go func() {
-		request, err := proto.NewReader(serverConn).ReadSentence()
-		if err != nil {
-			done <- err
-			return
-		}
-		if request.Word != "/interface/wifi/datapath/unset" || request.Map["numbers"] != "*1" || request.Map["value-name"] != "vlan-id" {
-			done <- fmt.Errorf("unexpected API unset: %v", request)
-			return
-		}
-		writer := proto.NewWriter(serverConn)
-		writer.BeginSentence()
-		writer.WriteWord("!done")
-		done <- writer.EndSentence()
-	}()
-	c := &ApiClient{ctx: context.Background(), Transport: TransportAPI, Client: nativeClient}
-	if err := c.SendRequest(crudUnset, &URL{Path: "/interface/wifi/datapath"}, MikrotikItem{"numbers": "*1", "value-name": "vlan-id"}, nil); err != nil {
-		t.Fatal(err)
-	}
-	if err := <-done; err != nil {
-		t.Fatal(err)
-	}
-}
-
 func TestBogonWifiDatapathDirectValuesAndRefresh(t *testing.T) {
 	res := ResourceWifiDatapath()
 	row := MikrotikItem{".id": "*1", "name": "direct"}
@@ -323,7 +280,7 @@ func TestBogonWifiDatapathDirectValuesAndRefresh(t *testing.T) {
 		}
 	}))
 	defer server.Close()
-	client := &RestClient{ctx: context.Background(), HostURL: server.URL, Transport: TransportREST, extra: &ExtraParams{}, Client: server.Client()}
+	client := &RestClient{ctx: context.Background(), HostURL: server.URL, extra: &ExtraParams{}, Client: server.Client()}
 	config := map[string]interface{}{"name": "direct", "bridge": "none", "traffic_processing": "on-cap", "vlan_id": 0}
 	d := wifiLifecycleData(t, res, config, nil)
 	d.SetId("*1")

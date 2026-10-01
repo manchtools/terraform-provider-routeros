@@ -13,10 +13,8 @@ func isWifiProfilePath(path string) bool {
 }
 
 func readWifiDirectConfig(id *ItemId, path string, c Client) (*[]MikrotikItem, error) {
-	url := &URL{Path: path, Query: []string{"?" + id.Type.String() + "=" + id.Value}}
-	if c.GetTransport() == TransportREST {
-		url.Path += "/print"
-	}
+	url := &URL{Path: path + "/print", Query: []string{"?" + id.Type.String() + "=" + id.Value}}
+
 	var rows []MikrotikItem
 	err := c.SendRequest(crudPrintConfig, url, MikrotikItem{"config": ""}, &rows)
 	return &rows, err
@@ -88,10 +86,8 @@ func wifiDirectUpdate(s map[string]*schema.Schema) schema.UpdateContextFunc {
 			if _, configured := item[native]; configured {
 				continue
 			}
-			path := metadata.Path
-			if c.GetTransport() == TransportREST {
-				path += "/unset"
-			}
+			path := metadata.Path + "/unset"
+
 			if err := c.SendRequest(crudUnset, &URL{Path: path}, MikrotikItem{"numbers": id, "value-name": native}, nil); err != nil {
 				return diag.Errorf("Failed to unset direct WiFi setting %s: %s", native, err)
 			}

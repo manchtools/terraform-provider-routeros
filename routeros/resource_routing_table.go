@@ -103,32 +103,6 @@ func ResourceRoutingTable() *schema.Resource {
 			// Response ID.
 			d.SetId(res.GetID(Id))
 
-			// We ask for information again in the case of API.
-			if m.(Client).GetTransport() == TransportAPI {
-				r, err := ReadItems(&ItemId{Id, res.GetID(Id)}, metadata.Path, m.(Client))
-				if err != nil {
-					ColorizedDebug(ctx, fmt.Sprintf(ErrorMsgPut, err))
-					return diag.FromErr(err)
-				}
-
-				if len(*r) == 0 {
-					return diag.Diagnostics{
-						diag.Diagnostic{
-							Severity: diag.Error,
-							Summary: fmt.Sprintf("Mikrotik resource path='%v' id='%v' not found",
-								metadata.Path, res.GetID(Id)),
-						},
-					}
-				}
-
-				res = (*r)[0]
-				if _, ok := res["fib"]; ok {
-					res["fib"] = "yes"
-				} else {
-					res["fib"] = "no"
-				}
-			}
-
 			return MikrotikResourceDataToTerraform(res, resSchema, d)
 		},
 

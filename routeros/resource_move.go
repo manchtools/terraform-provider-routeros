@@ -116,9 +116,8 @@ func ResourceMoveItems() *schema.Resource {
 			path = strings.ReplaceAll(path.(string), "_", "/")
 		}
 
-		if m.(Client).GetTransport() == TransportREST {
-			path = path.(string) + "/move"
-		}
+		path = path.(string) + "/move"
+
 		err := m.(Client).SendRequest(crudMove, &URL{Path: path.(string)}, item, nil)
 		if err != nil {
 			ColorizedDebug(ctx, fmt.Sprintf(ErrorMsgPut, err))

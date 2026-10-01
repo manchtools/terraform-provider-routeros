@@ -96,10 +96,8 @@ func wifiCapsmanDelete(s map[string]*schema.Schema) schema.DeleteContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		c := m.(Client)
 		path := GetMetadata(s).Path
-		updatePath := path
-		if c.GetTransport() == TransportREST {
-			updatePath += "/set"
-		}
+		updatePath := path + "/set"
+
 		// CAPsMAN is a settings singleton. Deleting only state leaves a running
 		// manager, while resetting all settings could affect unrelated certificates.
 		if err := c.SendRequest(crudPost, &URL{Path: updatePath}, MikrotikItem{"enabled": "false"}, nil); err != nil {

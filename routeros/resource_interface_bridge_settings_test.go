@@ -1,7 +1,6 @@
 package routeros
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -33,13 +32,7 @@ func TestAccInterfaceBridgeSettingsTest_basic(t *testing.T) {
 }
 
 func testAccInterfaceBridgeSettingsConfig(testName string) string {
-	if strings.Contains(testName, "API") {
-		return providerConfig + `
-resource "routeros_interface_bridge_settings" "test" {
-	use_ip_firewall	= true
-}
-`
-	}
+
 	return providerConfig + `
 resource "routeros_interface_bridge_settings" "test" {
 	use_ip_firewall	= false

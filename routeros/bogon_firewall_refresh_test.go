@@ -51,7 +51,7 @@ func TestBogonFirewallClearedSelectors(t *testing.T) {
 					json.NewEncoder(w).Encode([]MikrotikItem{row})
 				}))
 				defer server.Close()
-				client := &RestClient{ctx: context.Background(), HostURL: server.URL, Transport: TransportREST, Client: server.Client()}
+				client := &RestClient{ctx: context.Background(), HostURL: server.URL, Client: server.Client()}
 				diags := res.ReadContext(context.Background(), d, client)
 				if diags.HasError() != (outcome == "read error") {
 					t.Fatalf("unexpected read diagnostics: %v", diags)

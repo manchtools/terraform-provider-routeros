@@ -1,7 +1,6 @@
 package routeros
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -60,42 +59,24 @@ func testAccCapsManManagerUnitConfig(testName, resourceName string) string {
 	switch resourceName {
 	// AAA
 	case "routeros_capsman_aaa":
-		if strings.Contains(testName, "API") {
-			// API
-			conf += `
-			resource "routeros_capsman_aaa" "test_3a" {
-				called_format  = "ssid"
-				mac_mode       = "as-username-and-password"
-			}
-			`
-		} else {
-			// REST
-			conf += `
+
+		// REST
+		conf += `
 			resource "routeros_capsman_aaa" "test_3a" {
 				called_format  = "mac:ssid"
 				mac_mode       = "as-username"
 			}
 			`
-		}
 	// Manager
 	case "routeros_capsman_manager":
-		if strings.Contains(testName, "API") {
-			// API
-			conf += `
-			resource "routeros_capsman_manager" "test_manager" {
-				enabled        = true
-				upgrade_policy = "require-same-version"
-			}		
-			`
-		} else {
-			// REST
-			conf += `
+
+		// REST
+		conf += `
 			resource "routeros_capsman_manager" "test_manager" {
 				enabled        = false
 				upgrade_policy = "none"
 			}		
 			`
-		}
 	// CAPsMAN interfaces
 	case "routeros_capsman_manager_interface":
 		conf += `

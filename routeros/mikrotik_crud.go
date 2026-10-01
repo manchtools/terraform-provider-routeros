@@ -13,6 +13,14 @@ var (
 	errEmptyPath = fmt.Errorf("the resource path not defined")
 )
 
+// REST command suffixes used by context-selected create operations.
+var restCommandSuffix = map[crudMethod]string{
+	crudCreate: "/add", crudRead: "/print", crudUpdate: "/set", crudDelete: "/remove",
+	crudPost: "/set", crudImport: "/import", crudSign: "/sign", crudSignViaScep: "/add-scep",
+	crudRemove: "/remove", crudRevoke: "/issued-revoke", crudMove: "/move", crudStart: "/start",
+	crudStop: "/stop", crudGenerateKey: "/generate-key", crudUnset: "/unset", crudPrintConfig: "/print",
+}
+
 // https://help.mikrotik.com/docs/display/ROS/REST+API
 
 func CreateItem(ctx context.Context, item MikrotikItem, resourcePath string, c Client) (MikrotikItem, error) {
@@ -27,10 +35,9 @@ func CreateItem(ctx context.Context, item MikrotikItem, resourcePath string, c C
 
 	if cm := ctxGetCrudMethod(ctx); cm != crudUnknown {
 		crud = cm
-		if c.GetTransport() == TransportREST {
-			// apiMethodName[crud] is CLI path
-			resourcePath += apiMethodName[crud]
-		}
+
+		// REST command methods use explicit console command paths.
+		resourcePath += restCommandSuffix[crud]
 	}
 
 	res := MikrotikItem{}
@@ -71,12 +78,7 @@ func ReadItemsFiltered(filter []string, resourcePath string, c Client) (*[]Mikro
 
 	// Filter format: name=value
 	// REST query: name=value; name=value
-	// API  query: ?=name=value; ?=name=value
-	if c.GetTransport() == TransportAPI {
-		for i, s := range filter {
-			filter[i] = "?=" + s
-		}
-	}
+
 	url := &URL{Path: resourcePath, Query: filter}
 
 	var res []MikrotikItem
@@ -93,12 +95,8 @@ func UpdateItem(id *ItemId, resourcePath string, item MikrotikItem, c Client) (M
 		return nil, errEmptyPath
 	}
 
-	if c.GetTransport() == TransportREST {
-		// /interface/vlan/*39
-		resourcePath += "/" + id.Value
-	} else {
-		item[".id"] = id.Value
-	}
+	// /interface/vlan/*39
+	resourcePath += "/" + id.Value
 
 	res := MikrotikItem{}
 	err := c.SendRequest(crudUpdate, &URL{Path: resourcePath}, item, &res)
@@ -116,16 +114,12 @@ func DeleteItem(id *ItemId, resourcePath string, c Client) error {
 
 	url := &URL{Path: resourcePath}
 
-	if c.GetTransport() == TransportREST {
-		// This method is used to delete the record with a specified ID from the menu encoded in the URL.
-		// If the deletion has been succeeded, the server responds with an empty response.
-		// For example, call to delete the record twice, on second call router will return 404 error.
+	// This method is used to delete the record with a specified ID from the menu encoded in the URL.
+	// If the deletion has been succeeded, the server responds with an empty response.
+	// For example, call to delete the record twice, on second call router will return 404 error.
 
-		// /interface/vlan/*39
-		url.Path += "/" + id.Value
-	} else {
-		url.Query = []string{"=.id=" + id.Value}
-	}
+	// /interface/vlan/*39
+	url.Path += "/" + id.Value
 
 	return c.SendRequest(crudDelete, url, nil, &MikrotikItem{})
 }

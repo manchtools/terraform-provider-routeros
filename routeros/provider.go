@@ -27,19 +27,8 @@ func Provider() *schema.Provider {
 					[]string{"ROS_HOSTURL", "MIKROTIK_HOST"},
 					nil,
 				),
-				Description: `URL of the MikroTik router, default is TLS connection to REST.
-	* API: api[s]://host[:port]
-		* api://router.local
-		* apis://router.local:8729
-	* REST: http[s]://host
-		* http://router.local
-		* https://router.local
-		* router.local
-		* 127.0.0.1
-
-
-	export ROS_HOSTURL=router.local or export MIKROTIK_HOST=router.local
-`,
+				Description:  "RouterOS REST endpoint (http:// or https://). Bare hosts default to HTTPS; an optional trailing /rest is accepted. Binary api:// and apis:// transports are unsupported (env: ROS_HOSTURL | MIKROTIK_HOST).",
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 			"username": {
 				Type:     schema.TypeString,

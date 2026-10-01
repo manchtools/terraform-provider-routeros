@@ -1,13 +1,5 @@
 package routeros
 
-type TransportType int
-
-// Using numbering from 1 to control type values.
-const (
-	TransportAPI TransportType = 1 + iota
-	TransportREST
-)
-
 type IdType int
 
 const (
@@ -48,7 +40,7 @@ func (m MikrotikItem) GetID(t IdType) string {
 		if id, ok := m[".id"]; ok {
 			return id
 		}
-		// API
+		// REST command responses can carry the created ID in ret.
 		if id, ok := m["ret"]; ok {
 			return id
 		}

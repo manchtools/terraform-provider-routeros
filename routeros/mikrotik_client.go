@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/hex"
+	"fmt"
 	"net/http"
 	"net/url"
 	"os"
@@ -12,14 +13,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-routeros/routeros/v3"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type Client interface {
 	GetExtraParams() *ExtraParams
-	GetTransport() TransportType
 	SendRequest(method crudMethod, url *URL, item MikrotikItem, result interface{}) error
 }
 
@@ -77,43 +76,9 @@ func NewClient(ctx context.Context, d *schema.ResourceData) (interface{}, diag.D
 		tlsConf.RootCAs = certPool
 	}
 
-	routerUrl, err := url.Parse(d.Get("hosturl").(string))
-	if err != nil || routerUrl.Host == "" {
-		routerUrl, err = url.Parse("https://" + d.Get("hosturl").(string))
-	}
+	routerUrl, err := parseRouterURL(d.Get("hosturl").(string))
 	if err != nil {
-		return nil, diag.Diagnostics{
-			{
-				Severity: diag.Error,
-				Summary:  err.Error(),
-				Detail:   "Error while parsing the router URL: '" + d.Get("hosturl").(string) + "'",
-			},
-		}
-	}
-	routerUrl.Path = strings.TrimSuffix(routerUrl.Path, "/")
-
-	var useTLS = true
-	var transport = TransportREST
-
-	// Parse URL.
-	switch routerUrl.Scheme {
-	case "http":
-	case "https":
-	case "apis":
-		routerUrl.Scheme = ""
-		if routerUrl.Port() == "" {
-			routerUrl.Host += ":8729"
-		}
-		transport = TransportAPI
-	case "api":
-		routerUrl.Scheme = ""
-		if routerUrl.Port() == "" {
-			routerUrl.Host += ":8728"
-		}
-		useTLS = false
-		transport = TransportAPI
-	default:
-		panic("[NewClient] wrong transport type: " + routerUrl.Scheme)
+		return nil, diag.FromErr(err)
 	}
 
 	RouterOSVersion = d.Get("routeros_version").(string)
@@ -121,50 +86,11 @@ func NewClient(ctx context.Context, d *schema.ResourceData) (interface{}, diag.D
 		ColorizedMessage(ctx, INFO, "RouterOS from env: "+RouterOSVersion)
 	}
 
-	if transport == TransportAPI {
-		api := &ApiClient{
-			ctx:       ctx,
-			HostURL:   routerUrl.Host,
-			Username:  d.Get("username").(string),
-			Password:  d.Get("password").(string),
-			Transport: TransportAPI,
-			extra: &ExtraParams{
-				SuppressSysODelWarn: d.Get("suppress_syso_del_warn").(bool),
-			},
-		}
-
-		if useTLS {
-			api.Client, err = routeros.DialTLS(api.HostURL, api.Username, api.Password, &tlsConf)
-		} else {
-			api.Client, err = routeros.Dial(api.HostURL, api.Username, api.Password)
-		}
-		if err != nil {
-			return nil, diag.FromErr(err)
-		}
-
-		// The synchronous client has an infinite wait issue
-		// when an error occurs while creating multiple resources.
-		api.Async()
-
-		if RouterOSVersion == "" {
-			ros, diags := GetRouterOSVersion(api)
-			if diags != nil {
-				return nil, diags
-			}
-
-			RouterOSVersion = ros
-			ColorizedMessage(ctx, INFO, "RouterOS: "+RouterOSVersion)
-		}
-
-		return api, nil
-	}
-
 	rest := &RestClient{
-		ctx:       ctx,
-		HostURL:   routerUrl.String(),
-		Username:  d.Get("username").(string),
-		Password:  d.Get("password").(string),
-		Transport: TransportREST,
+		ctx:      ctx,
+		HostURL:  routerUrl.String(),
+		Username: d.Get("username").(string),
+		Password: d.Get("password").(string),
 		extra: &ExtraParams{
 			SuppressSysODelWarn: d.Get("suppress_syso_del_warn").(bool),
 		},
@@ -193,18 +119,34 @@ func NewClient(ctx context.Context, d *schema.ResourceData) (interface{}, diag.D
 	return rest, nil
 }
 
+// parseRouterURL accepts REST endpoints and defaults bare hosts to HTTPS.
+// A trailing /rest is accepted without adding it twice to outgoing requests.
+func parseRouterURL(endpoint string) (*url.URL, error) {
+	if !strings.Contains(endpoint, "://") {
+		endpoint = "https://" + endpoint
+	}
+	u, err := url.Parse(endpoint)
+	if err != nil {
+		return nil, fmt.Errorf("invalid RouterOS REST endpoint: %w", err)
+	}
+	if u.Scheme != "http" && u.Scheme != "https" {
+		return nil, fmt.Errorf("RouterOS provider is REST-only; use http:// or https:// instead of %q", u.Scheme)
+	}
+	if u.Hostname() == "" {
+		return nil, fmt.Errorf("RouterOS REST endpoint must include a host")
+	}
+	if u.User != nil || u.RawQuery != "" || u.Fragment != "" {
+		return nil, fmt.Errorf("RouterOS REST endpoint must not include credentials, a query or a fragment; use the username and password fields")
+	}
+	escapedPath := u.EscapedPath()
+	u.Path = strings.TrimSuffix(strings.TrimRight(u.Path, "/"), "/rest")
+	u.RawPath = strings.TrimSuffix(strings.TrimRight(escapedPath, "/"), "/rest")
+	return u, nil
+}
+
 type URL struct {
 	Path  string   // URL path without '/rest'.
 	Query []string // Query values.
-}
-
-// GetApiCmd Returns the set of commands for the API client.
-func (u *URL) GetApiCmd() []string {
-	res := []string{u.Path}
-	//if len(u.Query) > 0 && u.Query[len(u.Query) - 1] != "?#|" {
-	//	u.Query = append(u.Query, "?#|")
-	//}
-	return append(res, u.Query...)
 }
 
 // GetRestURL Returns the URL for the client

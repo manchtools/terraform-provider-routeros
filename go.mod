@@ -4,7 +4,6 @@ go 1.26.6
 
 require (
 	github.com/fatih/color v1.18.0
-	github.com/go-routeros/routeros/v3 v3.0.1
 	github.com/hashicorp/go-cty v1.5.0
 	github.com/hashicorp/terraform-plugin-docs v0.24.0
 	github.com/hashicorp/terraform-plugin-log v0.10.0

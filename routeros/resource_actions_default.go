@@ -73,7 +73,7 @@ func DefaultCreateUpdate(s map[string]*schema.Schema) func(context.Context, *sch
 
 		res, err := ReadItems(&ItemId{Name, d.Get("name").(string)}, metadata.Path, m.(Client))
 		if err != nil {
-			// API/REST client error.
+			// REST client error.
 			ColorizedDebug(ctx, fmt.Sprintf(ErrorMsgPatch, err))
 			return diag.FromErr(err)
 		}
@@ -88,10 +88,7 @@ func DefaultCreateUpdate(s map[string]*schema.Schema) func(context.Context, *sch
 		d.SetId((*res)[0].GetID(Id))
 		item[".id"] = d.Id()
 
-		var resUrl string
-		if m.(Client).GetTransport() == TransportREST {
-			resUrl = "/set"
-		}
+		resUrl := "/set"
 
 		err = m.(Client).SendRequest(crudPost, &URL{Path: metadata.Path + resUrl}, item, nil)
 		if err != nil {

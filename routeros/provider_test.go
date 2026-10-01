@@ -2,8 +2,6 @@ package routeros
 
 import (
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"regexp"
 	"strings"
@@ -16,9 +14,8 @@ import (
 
 var testAccProvider *schema.Provider
 var testAccProviderFactories map[string]func() (*schema.Provider, error)
-var testNames = []string{"API", "REST"}
+var testNames = []string{"REST"}
 
-var reHost = regexp.MustCompile(`^(?:\S+://)?(\S+?)(?::\d+)*$`)
 var reVersion = regexp.MustCompile(`\d+`)
 
 var providerConfig = `
@@ -120,21 +117,15 @@ func TestCheckMinVersion(t *testing.T) {
 	}
 }
 
+// Keep the configured REST scheme and port, including HTTP lab endpoints.
 func testSetTransportEnv(t *testing.T, testName string) {
-	host := reHost.FindStringSubmatch(os.Getenv("ROS_HOSTURL"))
-	switch {
-	case strings.Contains(testName, "API"):
-		if err := os.Setenv("ROS_HOSTURL", "apis://"+host[1]); err != nil {
-			t.Error(err)
-		}
-	case strings.Contains(testName, "REST"):
-		if err := os.Setenv("ROS_HOSTURL", "https://"+host[1]); err != nil {
-			t.Error(err)
-		}
-	default:
-		t.Fatal("Unsupported test name format. The test must have the suffix API or REST.")
+	t.Helper()
+	if !strings.Contains(testName, "REST") {
+		t.Fatal("The test must have the suffix REST")
 	}
-
+	if _, err := parseRouterURL(os.Getenv("ROS_HOSTURL")); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func testAccPreCheck(t *testing.T) {
@@ -167,65 +158,20 @@ func checkResourceSchema(s map[string]*schema.Schema, t *testing.T) {
 
 func testCheckResourceDestroy(resourcePath, resourceType string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		cApi, _ := testAccProvider.Meta().(*ApiClient)
-		cRest, _ := testAccProvider.Meta().(*RestClient)
-		var testTransport TransportType
-
-		switch testAccProvider.Meta().(type) {
-		case *ApiClient:
-			testTransport = TransportAPI
-		case *RestClient:
-			testTransport = TransportREST
-		default:
-			panic("[testCheckResourceDestroy] wrong transport type")
-		}
-
+		client := testAccProvider.Meta().(Client)
+		idType := IdType(Provider().ResourcesMap[resourceType].Schema[MetaId].Default.(int))
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != resourceType {
 				continue
 			}
-			id := rs.Primary.ID
-			idName := IdType(Provider().ResourcesMap[resourceType].Schema[MetaId].Default.(int)).String()
-
-			switch testTransport {
-			case TransportAPI:
-				cmd := []string{resourcePath + "/print", "?" + idName + "=" + id}
-				res, err := cApi.RunArgs(cmd)
-				if err != nil {
-					return nil
-				}
-
-				if len(res.Re) > 0 {
-					return fmt.Errorf("resource %v %s has been found", resourceType, id)
-				}
-			case TransportREST:
-				// Escaping spaces!
-				req, err := http.NewRequest("GET",
-					fmt.Sprintf("%s/rest%s?%s=%s", cRest.HostURL, resourcePath, idName, strings.Replace(id, " ", "%20", -1)), nil)
-				if err != nil {
-					return err
-				}
-				req.Header.Set("Content-Type", "application/json")
-				req.SetBasicAuth(cRest.Username, cRest.Password)
-
-				res, err := cRest.Do(req)
-
-				if err != nil {
-					return err
-				}
-
-				if res == nil {
-					return fmt.Errorf("the response body is empty")
-				}
-
-				if buf, _ := io.ReadAll(res.Body); string(buf) != "[]" {
-					return fmt.Errorf("resource %v %s has been found", resourceType, id)
-				}
+			rows, err := ReadItems(&ItemId{Type: idType, Value: rs.Primary.ID}, resourcePath, client)
+			if err != nil {
+				return err
 			}
-
-			return nil
+			if len(*rows) != 0 {
+				return fmt.Errorf("resource %v %s has been found", resourceType, rs.Primary.ID)
+			}
 		}
-
 		return nil
 	}
 }

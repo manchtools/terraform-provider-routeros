@@ -399,9 +399,8 @@ func startSniffer(ctx context.Context, s map[string]*schema.Schema, d *schema.Re
 	var resUrl = &URL{
 		Path: s[MetaResourcePath].Default.(string),
 	}
-	if m.(Client).GetTransport() == TransportREST {
-		resUrl.Path += "/start"
-	}
+
+	resUrl.Path += "/start"
 
 	err := m.(Client).SendRequest(crudStart, resUrl, MikrotikItem{}, nil)
 	if err != nil {
@@ -416,9 +415,8 @@ func stopSniffer(ctx context.Context, s map[string]*schema.Schema, d *schema.Res
 	var resUrl = &URL{
 		Path: s[MetaResourcePath].Default.(string),
 	}
-	if m.(Client).GetTransport() == TransportREST {
-		resUrl.Path += "/stop"
-	}
+
+	resUrl.Path += "/stop"
 
 	err := m.(Client).SendRequest(crudStop, resUrl, MikrotikItem{}, nil)
 	if err != nil {

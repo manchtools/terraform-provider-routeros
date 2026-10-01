@@ -1,6 +1,6 @@
 # Bogon fork scope and review
 
-This fork builds `manchtools/routeros` version `1.99.1-bogon.5` for Bogon. The baseline is upstream main at `0d8c069c20a012300dfeeb96cb343ad7a5e7ebfb`. It keeps upstream history and the MPL 2.0 license. Bogon pins a commit and archive checksum, builds an unsigned executable and installs it through a local OpenTofu mirror. Registry publication, signed releases and state migrations are deferred.
+This fork builds `manchtools/routeros` version `1.99.1-bogon.6` for Bogon. The baseline is upstream main at `0d8c069c20a012300dfeeb96cb343ad7a5e7ebfb`. It keeps upstream history and the MPL 2.0 license. Bogon pins a commit and archive checksum, builds an unsigned executable and installs it through a local OpenTofu mirror. Registry publication, signed releases and state migrations are deferred.
 
 ## Reviewed upstream contributions
 
@@ -38,8 +38,14 @@ PRs #1004 and the remaining #1009 changes are excluded because they suppress own
 
 Router-owned DHCP-PD callbacks and HA election hooks remain necessary for autonomous behavior between applies.
 
+## REST-only transport
+
+Revision 6 removes the binary API client, Go driver dependency, protocol enum and transport branches. Provider endpoints accept HTTP/HTTPS and bare hosts (default HTTPS), with optional `/rest`; unsupported schemes return diagnostics before connecting. TLS verification, explicit CA/insecure options, environment credentials and version discovery remain supported. REST command paths and JSON query arrays remain available for singleton updates, unset, ordering, script execution and certificate operations. Native command replies can still carry IDs in `ret`.
+
+Resource/data source schemas and native IDs are unchanged. REST state created with revision 5 was verified using the revision 6 executable without migration. Users of the removed `api://` or `apis://` schemes must switch to an HTTP(S) REST endpoint. The router’s binary API services and user policies are not changed by this provider migration.
+
 ## Verification and limits
 
-Offline Go tests, schema validation, vet, race checks for Bogon regressions and build pass. Regression tests cover the selected DHCP, address-list, parser and diff-comparison fixes. REST lifecycle fixtures cover MLAG on 7.21.5, 7.22.3, 7.23.7 and 7.24.5, WiFi omission/retry and CAPsMAN failure paths. An in-memory API connection verifies unset command encoding. Bogon tests use the actual built provider and OpenTofu 1.13.0; the MLAG test exercises apply, unchanged plan, native priority drift, correction and destroy.
+Offline Go tests, schema validation, vet, race checks for Bogon regressions and build pass. Regression tests cover the selected DHCP, address-list, parser and diff-comparison fixes. REST lifecycle fixtures cover MLAG on 7.21.5, 7.22.3, 7.23.7 and 7.24.5, WiFi omission/retry and CAPsMAN failure paths. REST wire tests verify CRUD, command suffixes, authentication, TLS and native command response IDs. Bogon tests use the actual built provider and OpenTofu 1.13.0; the MLAG test exercises apply, unchanged plan, native priority drift, correction and destroy.
 
 The additional fixes were also tested sequentially over REST against a RouterOS 7.24.2 CHR test VM, with before/after reproduction, native readback, empty final plans and probe cleanup. [LIVE_VERIFICATION.md](LIVE_VERIFICATION.md) records the evidence and limits. WiFi profile inheritance and unset behavior are verified natively; CHR has no radios, so physical WiFi interface lifecycle, radio traffic and MLAG failover remain unverified. The multi-version fixtures establish API contracts rather than live coverage of those firmware versions. Current [MLAG documentation](https://help.mikrotik.com/docs/spaces/ROS/pages/67633179/Multi-chassis+Link+Aggregation+Group), [WiFi CLI reference](https://manual.mikrotik.com/docs/cli-reference/interface/wifi/datapath/) and [RouterOS changelogs](https://mikrotik.com/download/changelogs) describe the relevant interfaces. Newer versions should be checked against native observations before deployment.

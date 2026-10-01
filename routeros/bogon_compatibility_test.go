@@ -258,7 +258,7 @@ func TestBogonWifi6GHzCRUD(t *testing.T) {
 				}
 			}))
 			t.Cleanup(server.Close)
-			client := &RestClient{ctx: context.Background(), HostURL: server.URL, Transport: TransportREST, extra: &ExtraParams{}, Client: server.Client()}
+			client := &RestClient{ctx: context.Background(), HostURL: server.URL, extra: &ExtraParams{}, Client: server.Client()}
 			data := bogonResourceData(t, tc.resource, tc.config)
 			if diags := tc.resource.CreateContext(context.Background(), data, client); diags.HasError() {
 				t.Fatal(diags)

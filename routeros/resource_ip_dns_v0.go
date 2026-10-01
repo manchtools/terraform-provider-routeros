@@ -169,11 +169,7 @@ func ResourceDnsV0() *schema.Resource {
 				"verify-doh-cert":       "no",
 			}
 
-			var resUrl string
-			if m.(Client).GetTransport() == TransportREST {
-				// https://router/rest/ip/dns/set
-				resUrl = "/set"
-			}
+			resUrl := "/set"
 
 			// Used POST request!
 			err := m.(Client).SendRequest(crudPost, &URL{Path: resSchema[MetaResourcePath].Default.(string) + resUrl},

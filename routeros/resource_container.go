@@ -338,9 +338,8 @@ func startContainer(ctx context.Context, s map[string]*schema.Schema, d *schema.
 	var resUrl = &URL{
 		Path: s[MetaResourcePath].Default.(string),
 	}
-	if m.(Client).GetTransport() == TransportREST {
-		resUrl.Path += "/start"
-	}
+
+	resUrl.Path += "/start"
 
 	err = m.(Client).SendRequest(crudStart, resUrl, item, nil)
 	if err != nil {
@@ -377,9 +376,8 @@ func stopContainer(ctx context.Context, s map[string]*schema.Schema, d *schema.R
 	var resUrl = &URL{
 		Path: s[MetaResourcePath].Default.(string),
 	}
-	if m.(Client).GetTransport() == TransportREST {
-		resUrl.Path += "/stop"
-	}
+
+	resUrl.Path += "/stop"
 
 	err := m.(Client).SendRequest(crudStop, resUrl, item, nil)
 	if err != nil {
