@@ -29,3 +29,9 @@ The fix normalizes missing optional string fields explicitly registered as unset
 Disabled native BGP connections and templates were imported with input/output/local/remote blocks omitted from configuration. An unrelated update crashed the baseline provider. Guarding serialization alone stopped the crash but left perpetual removal diffs; live testing also exposed stale state when an entire native block disappeared.
 
 The fix checks empty, null and unknown nested values, skips unconfigured inherited blocks, marks inheritable BGP blocks optional/computed, and clears absent groups after complete native reads. Live tests updated comments without materializing inherited output overrides, then removed a parent's filter and confirmed both children followed it. Refresh removed the absent output from state. Explicit output blocks were subsequently applied, native removal was detected and corrected, the final plan was empty, and all owned BGP/filter probes were removed. Regression tests cover omitted inherited blocks, explicitly configured output and absent-block refresh. Omitting a block leaves its native settings unmanaged; it does not promise to erase every previous direct override.
+
+## Short rule-ordering sequences
+
+The baseline accepted an empty sequence in an OpenTofu plan and crashed during apply. The fix places the two-item minimum on the list schema and rejects short sequences in both runtime write callbacks before sending a command. Tests against the baseline implementation reproduce the slice panic; fixed runtime tests reject empty and one-item sequences without native calls.
+
+Live OpenTofu plans reject both invalid lengths with a validation diagnostic. Three disabled IPv6 rules in an isolated chain were then ordered `a,b,c`, updated to `b,a,c`, and checked against native print order. Both subsequent plans were empty. Destroy removed every probe rule.

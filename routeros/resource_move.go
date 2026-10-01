@@ -33,11 +33,11 @@ func ResourceMoveItems() *schema.Resource {
 		"sequence": {
 			Type:     schema.TypeList,
 			Required: true,
+			MinItems: 2,
 			Description: "List identifiers in the required sequence. To locate the ```sequence``` before an " +
 				"existing rule, add its ```id``` to the last element of the ```sequence```.",
 			Elem: &schema.Schema{
-				Type:     schema.TypeString,
-				MinItems: 2,
+				Type: schema.TypeString,
 			},
 		},
 		// "anchor_rule": {
@@ -89,6 +89,9 @@ func ResourceMoveItems() *schema.Resource {
 	}
 
 	resCreateUpdate := func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		if len(d.Get("sequence").([]any)) < 2 {
+			return diag.Errorf("sequence must contain at least two item IDs, including the destination")
+		}
 		var list []string
 		for _, v := range d.Get("sequence").([]any) {
 			list = append(list, v.(string))
