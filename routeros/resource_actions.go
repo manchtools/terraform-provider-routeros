@@ -252,7 +252,25 @@ func ResourceRead(ctx context.Context, s map[string]*schema.Schema, d *schema.Re
 
 	d.SetId((*res)[0].GetID(metadata.IdType))
 
-	return MikrotikResourceDataToTerraform((*res)[0], s, d)
+	item := (*res)[0]
+	// A complete firewall read omits unset selectors. Clear only fields that
+	// this resource explicitly supports unsetting, preserving other defaults
+	// and avoiding resets when processing partial write responses.
+	if strings.HasPrefix(metadata.Path, "/ip/firewall/") || strings.HasPrefix(metadata.Path, "/ipv6/firewall/") {
+		if fields, ok := s[MetaSetUnsetFields]; ok {
+			for field := range loadSkipFields(fields.Default.(string)) {
+				property := s[field]
+				if property == nil || property.Type != schema.TypeString || !property.Optional {
+					continue
+				}
+				native := SnakeToKebab(field)
+				if _, present := item[native]; !present {
+					item[native] = ""
+				}
+			}
+		}
+	}
+	return MikrotikResourceDataToTerraform(item, s, d)
 }
 
 // ResourceUpdate Updating the resource in accordance with the TF Schema.
