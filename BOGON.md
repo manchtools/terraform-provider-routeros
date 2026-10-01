@@ -1,6 +1,6 @@
 # Bogon fork scope and review
 
-This fork builds `manchtools/routeros` version `1.99.1-bogon.4` for Bogon. The baseline is upstream main at `0d8c069c20a012300dfeeb96cb343ad7a5e7ebfb`. It keeps upstream history and the MPL 2.0 license. Bogon pins a commit and archive checksum, builds an unsigned executable and installs it through a local OpenTofu mirror. Registry publication, signed releases and state migrations are deferred.
+This fork builds `manchtools/routeros` version `1.99.1-bogon.5` for Bogon. The baseline is upstream main at `0d8c069c20a012300dfeeb96cb343ad7a5e7ebfb`. It keeps upstream history and the MPL 2.0 license. Bogon pins a commit and archive checksum, builds an unsigned executable and installs it through a local OpenTofu mirror. Registry publication, signed releases and state migrations are deferred.
 
 ## Reviewed upstream contributions
 
@@ -19,7 +19,7 @@ These are selected patch integrations, with adaptations where needed, rather tha
 
 PR #992's singleton MLAG calls used ordinary CRUD and would fail on legacy firmware. Its BGP additions also left the legacy `add_path_out=none` default writable, causing unsupported writes on newer firmware. The fork corrects both and bounds version parsing to avoid an inherited malformed-version panic. BGP examples and docs reflect the computed-only legacy field.
 
-PRs #1004 and the remaining #1009 changes are excluded because they suppress ownership of writable MLAG/RA settings. #983 changes service IDs without upgrading existing state. #894's WiFi clearing addresses API only. #1007 makes unrelated schema breaks; #977 bulk caching is deferred. These exclusions are correctness and scope decisions, not claims of malicious intent. Remaining PRs require review before inclusion.
+PRs #1004 and the remaining #1009 changes are excluded because they suppress ownership of writable MLAG/RA settings. #983 changes service IDs without upgrading existing state. #894's WiFi clearing was not merged as written because it addresses API only; the fork implements and verifies equivalent direct-setting ownership over REST. #1007 makes unrelated schema breaks; #977 bulk caching is deferred. These exclusions are correctness and scope decisions, not claims of malicious intent. Remaining PRs require review before inclusion.
 
 ## Bogon fixes
 
@@ -29,10 +29,17 @@ PRs #1004 and the remaining #1009 changes are excluded because they suppress own
 - CAPsMAN destroy disables and verifies the singleton, retaining state on failure and preserving certificates/radios.
 - Existing Bogon route blackhole normalization and 6 GHz validation are retained; address VRF and legacy BGP observations remain read-only.
 
+- IPv6 address VRF is read-only; static address comparisons distinguish host and prefix changes while allowing equivalent IPv6 spelling.
+- Firewall refresh clears omitted registered selectors, including source/destination addresses, input/output interfaces and protocols. Configuration removal unsets those selectors.
+- Omitted BGP blocks no longer crash serialization or replay inherited settings; refresh clears groups that disappear. Explicitly configured blocks retain ownership.
+- Rule ordering rejects fewer than two IDs before issuing native commands.
+- WiFi interface/configuration maps use direct config reads and unset removed keys/references, preserving profile inheritance.
+- Dependencies are updated and the build requires Go 1.26.6 or newer. `govulncheck ./...` reports zero affected imported packages or reachable symbols; an unused deprecated OpenPGP module advisory remains.
+
 Router-owned DHCP-PD callbacks and HA election hooks remain necessary for autonomous behavior between applies.
 
 ## Verification and limits
 
 Offline Go tests, schema validation, vet, race checks for Bogon regressions and build pass. Regression tests cover the selected DHCP, address-list, parser and diff-comparison fixes. REST lifecycle fixtures cover MLAG on 7.21.5, 7.22.3, 7.23.7 and 7.24.5, WiFi omission/retry and CAPsMAN failure paths. An in-memory API connection verifies unset command encoding. Bogon tests use the actual built provider and OpenTofu 1.13.0; the MLAG test exercises apply, unchanged plan, native priority drift, correction and destroy.
 
-These are API contract fixtures, not live RouterOS acceptance tests. Physical MLAG failover, radio traffic and native WiFi unset/default visibility remain unverified. Current [MLAG documentation](https://help.mikrotik.com/docs/spaces/ROS/pages/67633179/Multi-chassis+Link+Aggregation+Group), [WiFi CLI reference](https://manual.mikrotik.com/docs/cli-reference/interface/wifi/datapath/) and [RouterOS changelogs](https://mikrotik.com/download/changelogs) describe the relevant interfaces. Newer versions should be checked against native observations before deployment.
+The additional fixes were also tested sequentially over REST against a RouterOS 7.24.2 CHR test VM, with before/after reproduction, native readback, empty final plans and probe cleanup. [LIVE_VERIFICATION.md](LIVE_VERIFICATION.md) records the evidence and limits. WiFi profile inheritance and unset behavior are verified natively; CHR has no radios, so physical WiFi interface lifecycle, radio traffic and MLAG failover remain unverified. The multi-version fixtures establish API contracts rather than live coverage of those firmware versions. Current [MLAG documentation](https://help.mikrotik.com/docs/spaces/ROS/pages/67633179/Multi-chassis+Link+Aggregation+Group), [WiFi CLI reference](https://manual.mikrotik.com/docs/cli-reference/interface/wifi/datapath/) and [RouterOS changelogs](https://mikrotik.com/download/changelogs) describe the relevant interfaces. Newer versions should be checked against native observations before deployment.
