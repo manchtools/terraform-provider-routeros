@@ -1,4 +1,4 @@
-VERSION=$(shell git describe --tags --abbrev=0)
+VERSION ?= $(shell git describe --tags --match 'v[0-9]*' --abbrev=0)
 
 EXT :=
 ifeq ($(OS),Windows_NT)
