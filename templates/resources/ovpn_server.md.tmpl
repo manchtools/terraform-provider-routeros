@@ -1,0 +1,40 @@
+# {{.Name}} ({{.Type}})
+{{ .Description | trimspace }}
+
+On RouterOS 7.17 and newer, each resource owns one named server entry. Creation
+adds that entry, refresh and updates use its native ID, and destroy removes it.
+Use distinct names and listening ports when configuring several servers. Import
+an existing server to manage it instead of creating another entry.
+
+Earlier versions expose one settings object. Creation and updates modify those
+settings, and destroy only forgets them. The `name` and `vrf` options require
+RouterOS 7.17 or newer. Firmware version discovery selects the native behavior.
+
+Use `disabled` to control either version. The compatible `enabled` option is
+its inverse; configure only one. When neither is set, a new server is disabled.
+
+After upgrading a legacy router to 7.17 or newer, the former singleton state ID
+does not identify a specific named server. The provider rejects that ID rather
+than choosing an entry. Remove only the old Terraform state record and import
+the existing server by its native ID or unique name before applying.
+
+{{ if .HasExample -}}
+## Example Usage
+{{ tffile .ExampleFile }}
+{{- end }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+{{ codefile "shell" .ImportFile }}
+
+Configuration-driven imports on RouterOS 7.17 and newer use the same selectors:
+
+```terraform
+import {
+  to = routeros_ovpn_server.server
+  id = "name=managed-ovpn"
+}
+```
+
+Match the resource configuration to the existing server before applying.

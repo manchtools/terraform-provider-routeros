@@ -1,6 +1,12 @@
 package routeros
 
 import (
+	"context"
+	"fmt"
+	"net/url"
+	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -77,7 +83,30 @@ func ResourceOpenVPNServer() *schema.Resource {
 			Default:     false,
 			Description: "Specifies if IPv6 IP tunneling mode should be possible with this OVPN server.",
 		},
-		KeyEnabled: PropEnabled("Defines whether the OVPN server is enabled or not."),
+		KeyEnabled: {
+			Type: schema.TypeBool, Optional: true, Computed: true,
+			Description:   "Compatibility alias for the inverse of disabled. Cannot be combined with disabled.",
+			ConflictsWith: []string{KeyDisabled},
+		},
+		KeyDisabled: {
+			Type: schema.TypeBool, Optional: true, Computed: true,
+			Description:   "Whether the server is disabled. A new server defaults to disabled when neither enabled nor disabled is configured.",
+			ConflictsWith: []string{KeyEnabled},
+		},
+		KeyName: {
+			Type: schema.TypeString, Optional: true, Computed: true,
+			Description:  "Server name. Available on RouterOS 7.17 and newer, which support multiple servers.",
+			ValidateFunc: validation.StringIsNotWhiteSpace,
+		},
+		KeyVrf: {
+			Type: schema.TypeString, Optional: true, Computed: true,
+			Description:  "VRF in which the server listens. Available on RouterOS 7.17 and newer.",
+			ValidateFunc: validation.StringIsNotWhiteSpace,
+		},
+		KeyInactive: {
+			Type: schema.TypeBool, Computed: true,
+			Description: "Whether this server is inactive.",
+		},
 		"ipv6_prefix_len": {
 			Type:     schema.TypeInt,
 			Optional: true,
@@ -192,14 +221,26 @@ func ResourceOpenVPNServer() *schema.Resource {
 	}
 
 	return &schema.Resource{
-		Description:   `##### *<span style="color:red">This resource requires a minimum version of RouterOS 7.8!</span>*`,
-		CreateContext: DefaultSystemCreate(resSchema),
-		ReadContext:   DefaultSystemRead(resSchema),
-		UpdateContext: DefaultSystemUpdate(resSchema),
-		DeleteContext: DefaultSystemDelete(resSchema),
+		Description:   "Manages OpenVPN server configuration on RouterOS 7.8 and newer. RouterOS 7.17 and newer use named server entries with native IDs and ordinary CRUD. Older versions have a singleton whose deletion only removes it from state.",
+		CreateContext: openVPNServerWrite(resSchema, true),
+		ReadContext:   openVPNServerRead(resSchema),
+		UpdateContext: openVPNServerWrite(resSchema, false),
+		DeleteContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+			modern, err := routerOSVersionAtLeast("7.17")
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			if !modern {
+				return SystemResourceDelete(ctx, resSchema, d, m)
+			}
+			if err := validateOpenVPNServerID(d.Id()); err != nil {
+				return diag.FromErr(err)
+			}
+			return ResourceDelete(ctx, resSchema, d, m)
+		},
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: openVPNServerImport(resSchema),
 		},
 
 		Schema:        resSchema,
@@ -211,5 +252,181 @@ func ResourceOpenVPNServer() *schema.Resource {
 				Version: 0,
 			},
 		},
+	}
+}
+
+const legacyOpenVPNServerID = "interface.ovpn-server.server"
+
+func openVPNServerConfigured(d *schema.ResourceData, key string) bool {
+	config := d.GetRawConfig()
+	return !config.IsNull() && config.IsKnown() && config.Type().IsObjectType() &&
+		config.Type().HasAttribute(key) && !config.GetAttr(key).IsNull()
+}
+
+// Keep the public schema stable while selecting the native properties after
+// provider configuration has discovered the router's version.
+func openVPNServerNativeSchema(properties map[string]*schema.Schema, modern bool) map[string]*schema.Schema {
+	native := make(map[string]*schema.Schema, len(properties)+1)
+	for key, value := range properties {
+		native[key] = value
+	}
+	if modern {
+		native[MetaSkipFields] = PropSkipFields(KeyEnabled)
+	} else {
+		native[MetaSkipFields] = PropSkipFields(KeyDisabled, KeyName, KeyVrf, KeyInactive)
+	}
+	return native
+}
+
+func validateOpenVPNServerID(id string) error {
+	if !strings.HasPrefix(id, "*") {
+		return fmt.Errorf("OpenVPN server ID %q does not identify a RouterOS 7.17+ server entry; import the existing server by its native ID or name", id)
+	}
+	return nil
+}
+
+func openVPNServerHydrate(row MikrotikItem, native map[string]*schema.Schema, d *schema.ResourceData, modern bool) diag.Diagnostics {
+	diags := MikrotikResourceDataToTerraform(row, native, d)
+	if diags.HasError() {
+		return diags
+	}
+	if modern {
+		if disabled, present := row[KeyDisabled]; present {
+			if err := d.Set(KeyEnabled, !BoolFromMikrotikJSON(disabled)); err != nil {
+				return append(diags, diag.FromErr(err)...)
+			}
+		}
+	} else if enabled, present := row[KeyEnabled]; present {
+		if err := d.Set(KeyDisabled, !BoolFromMikrotikJSON(enabled)); err != nil {
+			return append(diags, diag.FromErr(err)...)
+		}
+	}
+	return diags
+}
+
+func openVPNServerRead(properties map[string]*schema.Schema) schema.ReadContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		modern, err := routerOSVersionAtLeast("7.17")
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		native := openVPNServerNativeSchema(properties, modern)
+		path := native[MetaResourcePath].Default.(string)
+		if !modern {
+			row := MikrotikItem{}
+			if err := m.(Client).SendRequest(crudRead, &URL{Path: path}, nil, &row); err != nil {
+				return diag.FromErr(err)
+			}
+			d.SetId(legacyOpenVPNServerID)
+			return openVPNServerHydrate(row, native, d, false)
+		}
+		if err := validateOpenVPNServerID(d.Id()); err != nil {
+			return diag.FromErr(err)
+		}
+		rows, err := ReadItems(&ItemId{Id, d.Id()}, path, m.(Client))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if len(*rows) == 0 {
+			d.SetId("")
+			return nil
+		}
+		return openVPNServerHydrate((*rows)[0], native, d, true)
+	}
+}
+
+func openVPNServerWrite(properties map[string]*schema.Schema, create bool) func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics {
+	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+		modern, err := routerOSVersionAtLeast("7.17")
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if openVPNServerConfigured(d, KeyEnabled) && openVPNServerConfigured(d, KeyDisabled) {
+			return diag.Errorf("configure either enabled or disabled for the OpenVPN server, not both")
+		}
+		if !modern && (openVPNServerConfigured(d, KeyName) || openVPNServerConfigured(d, KeyVrf)) {
+			return diag.Errorf("OpenVPN server name and VRF require RouterOS 7.17 or newer")
+		}
+		if modern && !create {
+			if err := validateOpenVPNServerID(d.Id()); err != nil {
+				return diag.FromErr(err)
+			}
+		}
+		native := openVPNServerNativeSchema(properties, modern)
+		item, metadata := TerraformResourceDataToMikrotik(native, d)
+		enabled := d.Get(KeyEnabled).(bool)
+		if openVPNServerConfigured(d, KeyDisabled) || (modern && !openVPNServerConfigured(d, KeyEnabled) && !create) {
+			enabled = !d.Get(KeyDisabled).(bool)
+		}
+		if modern {
+			item[KeyDisabled] = BoolToMikrotikJSON(!enabled)
+		} else {
+			item[KeyEnabled] = BoolToMikrotikJSON(enabled)
+			if err := m.(Client).SendRequest(crudPost, &URL{Path: metadata.Path + "/set"}, item, nil); err != nil {
+				return diag.FromErr(err)
+			}
+			// The write succeeded even if the following refresh fails.
+			d.SetId(legacyOpenVPNServerID)
+			return openVPNServerRead(properties)(ctx, d, m)
+		}
+		var row MikrotikItem
+		if create {
+			row, err = CreateItem(ctx, item, metadata.Path, m.(Client))
+		} else {
+			row, err = UpdateItem(&ItemId{Id, d.Id()}, metadata.Path, item, m.(Client))
+		}
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if create {
+			if row.GetID(Id) == "" {
+				return diag.Errorf("OpenVPN server creation did not return a native ID")
+			}
+			d.SetId(row.GetID(Id))
+		}
+		return openVPNServerHydrate(row, native, d, true)
+	}
+}
+
+func openVPNServerImport(properties map[string]*schema.Schema) schema.StateContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+		modern, err := routerOSVersionAtLeast("7.17")
+		if err != nil {
+			return nil, err
+		}
+		if !modern {
+			if d.Id() != "." && d.Id() != legacyOpenVPNServerID {
+				return nil, fmt.Errorf("legacy OpenVPN singleton import requires . or %s", legacyOpenVPNServerID)
+			}
+			if diags := openVPNServerRead(properties)(ctx, d, m); diags.HasError() {
+				return nil, fmt.Errorf("read imported OpenVPN singleton: %v", diags)
+			}
+			return []*schema.ResourceData{d}, nil
+		}
+		field, value := "name", d.Id()
+		if strings.HasPrefix(value, "*") {
+			field = ".id"
+		} else if key, selected, ok := strings.Cut(value, "="); ok {
+			field, value = key, selected
+		}
+		if value == "" || (field != "name" && field != ".id") || value == legacyOpenVPNServerID || value == "." {
+			return nil, fmt.Errorf("import an OpenVPN server by native ID, name or name=server-name")
+		}
+		rows, err := ReadItemsFiltered([]string{field + "=" + url.QueryEscape(value)}, properties[MetaResourcePath].Default.(string), m.(Client))
+		if err != nil {
+			return nil, fmt.Errorf("find OpenVPN server: %w", err)
+		}
+		if len(*rows) != 1 {
+			return nil, fmt.Errorf("OpenVPN import %q matched %d servers; use a unique native ID or name", d.Id(), len(*rows))
+		}
+		row := (*rows)[0]
+		if err := validateOpenVPNServerID(row.GetID(Id)); err != nil {
+			return nil, err
+		}
+		d.SetId(row.GetID(Id))
+		if diags := openVPNServerHydrate(row, openVPNServerNativeSchema(properties, true), d, true); diags.HasError() {
+			return nil, fmt.Errorf("read imported OpenVPN server: %v", diags)
+		}
+		return []*schema.ResourceData{d}, nil
 	}
 }

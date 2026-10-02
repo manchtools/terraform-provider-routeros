@@ -1,5 +1,23 @@
 # routeros_ovpn_server (Resource)
-##### *<span style="color:red">This resource requires a minimum version of RouterOS 7.8!</span>*
+Manages OpenVPN server configuration on RouterOS 7.8 and newer. RouterOS 7.17 and newer use named server entries with native IDs and ordinary CRUD. Older versions have a singleton whose deletion only removes it from state.
+
+
+On RouterOS 7.17 and newer, each resource owns one named server entry. Creation
+adds that entry, refresh and updates use its native ID, and destroy removes it.
+Use distinct names and listening ports when configuring several servers. Import
+an existing server to manage it instead of creating another entry.
+
+Earlier versions expose one settings object. Creation and updates modify those
+settings, and destroy only forgets them. The `name` and `vrf` options require
+RouterOS 7.17 or newer. Firmware version discovery selects the native behavior.
+
+Use `disabled` to control either version. The compatible `enabled` option is
+its inverse; configure only one. When neither is set, a new server is disabled.
+
+After upgrading a legacy router to 7.17 or newer, the former singleton state ID
+does not identify a specific named server. The provider rejects that ID rather
+than choosing an entry. Remove only the old Terraform state record and import
+the existing server by its native ID or unique name before applying.
 
 ## Example Usage
 ```terraform
@@ -42,7 +60,9 @@ resource "routeros_ppp_secret" "test" {
 }
 
 resource "routeros_ovpn_server" "server" {
-  enabled         = true
+  # RouterOS 7.17+ supports multiple named servers. Omit name on older versions.
+  name            = "managed-ovpn"
+  disabled        = false
   certificate     = routeros_system_certificate.ovpn_server_crt.name
   auth            = ["sha256", "sha512"]
   tls_version     = "only-1.2"
@@ -66,13 +86,15 @@ resource "routeros_interface_ovpn_server" "user1" {
 - `certificate` (String) Name of the certificate that the OVPN server will use.
 - `cipher` (Set of String) Allowed ciphers.
 - `default_profile` (String) Default profile to use.
+- `disabled` (Boolean) Whether the server is disabled. A new server defaults to disabled when neither enabled nor disabled is configured.
 - `enable_tun_ipv6` (Boolean) Specifies if IPv6 IP tunneling mode should be possible with this OVPN server.
-- `enabled` (Boolean) Defines whether the OVPN server is enabled or not.
+- `enabled` (Boolean) Compatibility alias for the inverse of disabled. Cannot be combined with disabled.
 - `ipv6_prefix_len` (Number) Length of IPv6 prefix for IPv6 address which will be used when generating OVPN interface on the server side.
 - `keepalive_timeout` (String) Defines  the time period (in seconds) after which the router is starting to send  keepalive packets every second. If no traffic and no keepalive  responses have come for that period of time (i.e. 2 *  keepalive-timeout), not responding client is proclaimed disconnected
 - `mac_address` (String) Automatically generated MAC address of the server.
 - `max_mtu` (Number) Maximum Transmission Unit. Max packet size that the OVPN interface will be able to send without packet fragmentation.
 - `mode` (String) Layer3 or layer2 tunnel mode (alternatively tun, tap)
+- `name` (String) Server name. Available on RouterOS 7.17 and newer, which support multiple servers.
 - `netmask` (Number) Subnet mask to be applied to the client.
 - `port` (Number) Port to run the server on.
 - `protocol` (String) indicates the protocol to use when connecting with the remote endpoint.
@@ -85,13 +107,30 @@ resource "routeros_interface_ovpn_server" "user1" {
 - `require_client_certificate` (Boolean) If set to yes, then the server checks whether the client's certificate belongs to the same certificate chain.
 - `tls_version` (String) Specifies which TLS versions to allow.
 - `tun_server_ipv6` (String) IPv6 prefix address which will be used when generating the OVPN interface on the server side.
+- `vrf` (String) VRF in which the server listens. Available on RouterOS 7.17 and newer.
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `inactive` (Boolean) Whether this server is inactive.
 
 ## Import
-Import is supported using the following syntax:
 ```shell
-terraform import routeros_openvpn_server.server .
+# RouterOS 7.17+: import the existing server by native ID or its unique name.
+terraform import routeros_ovpn_server.server '*1'
+terraform import routeros_ovpn_server.server 'name=managed-ovpn'
+
+# Older RouterOS versions have one server settings object.
+terraform import routeros_ovpn_server.server .
 ```
+
+Configuration-driven imports on RouterOS 7.17 and newer use the same selectors:
+
+```terraform
+import {
+  to = routeros_ovpn_server.server
+  id = "name=managed-ovpn"
+}
+```
+
+Match the resource configuration to the existing server before applying.

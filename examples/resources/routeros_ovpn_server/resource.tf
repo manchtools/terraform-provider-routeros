@@ -37,7 +37,9 @@ resource "routeros_ppp_secret" "test" {
 }
 
 resource "routeros_ovpn_server" "server" {
-  enabled         = true
+  # RouterOS 7.17+ supports multiple named servers. Omit name on older versions.
+  name            = "managed-ovpn"
+  disabled        = false
   certificate     = routeros_system_certificate.ovpn_server_crt.name
   auth            = ["sha256", "sha512"]
   tls_version     = "only-1.2"
