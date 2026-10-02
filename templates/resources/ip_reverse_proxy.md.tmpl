@@ -1,0 +1,40 @@
+# {{.Name}} ({{.Type}})
+{{ .Description | trimspace }}
+
+The rule selects an exact SNI hostname, terminates HTTPS, and forwards plain
+HTTP to an IPv4 or IPv6 backend. Wildcard routing is not supported. A wildcard
+certificate can still cover several exact hostnames.
+
+The `reverse-proxy` service owns the listener port and fallback certificate.
+Keep its port distinct from an enabled `www-ssl` service, which also serves the
+HTTPS REST API. DNS and firewall input rules must allow clients to reach the
+listener. This resource does not change DNS, NAT or firewall rules.
+
+Dynamic container-app rules remain owned by RouterOS and cannot be imported,
+updated or deleted through this resource. Rule-level VRF is not exposed:
+RouterOS 7.24.2 silently ignored it in native probes. Listener VRF is configured
+through `routeros_ip_service`.
+
+{{ if .HasExample -}}
+## Example Usage
+{{ tffile .ExampleFile }}
+{{- end }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+Use the internal ID, an exact SNI hostname, or a selector that identifies one
+static rule. Ambiguous and dynamic-only selections are rejected.
+
+{{ codefile "shell" .ImportFile }}
+
+Configuration-driven imports use the same selectors:
+
+```terraform
+import {
+  to = routeros_ip_reverse_proxy.app
+  id = "sni=app.example.com"
+}
+```
+
+Match the resource configuration to the existing rule before applying the plan.

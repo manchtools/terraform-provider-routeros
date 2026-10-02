@@ -137,6 +137,7 @@ func Provider() *schema.Provider {
 			"routeros_ip_pool":                         ResourceIPPool(),
 			"routeros_ip_route":                        ResourceIPRoute(),
 			"routeros_ip_service":                      ResourceIpService(),
+			"routeros_ip_reverse_proxy":                ResourceIPReverseProxy(),
 			"routeros_ip_settings":                     ResourceIpSettings(),
 			"routeros_ip_smb":                          ResourceIpSMB(),
 			"routeros_ip_ssh_server":                   ResourceIpSSHServer(),

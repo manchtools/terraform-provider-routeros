@@ -1,4 +1,5 @@
-# Import with the name of the ip service in case of the example use www-ssl
-terraform import routeros_ip_service.www_ssl www-ssl
-#Or you can import a resource using one of its attributes
-terraform import routeros_ip_service.www_ssl "name=xxx"
+# Import by service name. The address matches the for_each example.
+terraform import 'routeros_ip_service.tls["www-ssl"]' www-ssl
+
+# Alternatively use a selector for one static service.
+terraform import 'routeros_ip_service.tls["www-ssl"]' 'name=www-ssl'

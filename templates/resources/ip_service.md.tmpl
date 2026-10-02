@@ -1,0 +1,36 @@
+# {{.Name}} ({{.Type}})
+{{ .Description | trimspace }}
+
+Each resource manages one built-in RouterOS service. Creating the resource
+configures that existing service; destroying the resource forgets its state and
+does not delete or reset the service. State IDs remain service names. Changing
+`numbers` replaces the managed resource without deleting the old native service.
+
+The `reverse-proxy` service controls the reverse proxy's HTTPS listener and
+fallback certificate. Configure its rules with `routeros_ip_reverse_proxy`.
+Use different ports for an enabled reverse proxy and `www-ssl` management.
+
+{{ if .HasExample -}}
+## Example Usage
+{{ tffile .ExampleFile }}
+{{- end }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+Import by service name, internal ID, or an attribute selector matching exactly
+one static service. Dynamic connection entries are excluded. The imported state
+uses the service name and populates `numbers`, regardless of the selector.
+
+{{ codefile "shell" .ImportFile }}
+
+OpenTofu and Terraform import blocks use the same selectors:
+
+```terraform
+import {
+  to = routeros_ip_service.enabled["ssh"]
+  id = "ssh"
+}
+```
+
+Match the resource configuration to the existing service before applying.

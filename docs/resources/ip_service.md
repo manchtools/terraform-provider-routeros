@@ -1,6 +1,15 @@
 # routeros_ip_service (Resource)
 
 
+Each resource manages one built-in RouterOS service. Creating the resource
+configures that existing service; destroying the resource forgets its state and
+does not delete or reset the service. State IDs remain service names. Changing
+`numbers` replaces the managed resource without deleting the old native service.
+
+The `reverse-proxy` service controls the reverse proxy's HTTPS listener and
+fallback certificate. Configure its rules with `routeros_ip_reverse_proxy`.
+Use different ports for an enabled reverse proxy and `www-ssl` management.
+
 ## Example Usage
 ```terraform
 locals {
@@ -50,13 +59,13 @@ resource "routeros_ip_service" "enabled" {
 
 ### Required
 
-- `numbers` (String) The name of the service whose settings will be changed ( api, api-ssl, ftp, ssh, telnet, winbox, www, www-ssl ).
+- `numbers` (String) The name of the service whose settings will be changed ( api, api-ssl, ftp, ssh, telnet, winbox, www, www-ssl, reverse-proxy ). One resource manages one built-in service.
 - `port` (Number) The port particular service listens on.
 
 ### Optional
 
 - `address` (String) List of IP/IPv6 prefixes from which the service is accessible.
-- `certificate` (String) The name of the certificate used by a particular service. Applicable only for services that depend on certificates ( www-ssl, api-ssl ).
+- `certificate` (String) The name of the certificate used by a particular service. Applicable only for services that depend on certificates ( www-ssl, api-ssl, reverse-proxy ).
 - `disabled` (Boolean)
 - `max_sessions` (Number) Maximum number of concurrent connections to a particular service. This option is available in RouterOS starting from version 7.16.
 - `tls_version` (String) Specifies which TLS versions to allow by a particular service.
@@ -71,10 +80,25 @@ resource "routeros_ip_service" "enabled" {
 - `proto` (String)
 
 ## Import
-Import is supported using the following syntax:
+Import by service name, internal ID, or an attribute selector matching exactly
+one static service. Dynamic connection entries are excluded. The imported state
+uses the service name and populates `numbers`, regardless of the selector.
+
 ```shell
-# Import with the name of the ip service in case of the example use www-ssl
-terraform import routeros_ip_service.www_ssl www-ssl
-#Or you can import a resource using one of its attributes
-terraform import routeros_ip_service.www_ssl "name=xxx"
+# Import by service name. The address matches the for_each example.
+terraform import 'routeros_ip_service.tls["www-ssl"]' www-ssl
+
+# Alternatively use a selector for one static service.
+terraform import 'routeros_ip_service.tls["www-ssl"]' 'name=www-ssl'
 ```
+
+OpenTofu and Terraform import blocks use the same selectors:
+
+```terraform
+import {
+  to = routeros_ip_service.enabled["ssh"]
+  id = "ssh"
+}
+```
+
+Match the resource configuration to the existing service before applying.

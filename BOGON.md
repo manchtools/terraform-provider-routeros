@@ -46,6 +46,24 @@ Resource/data source schemas and native IDs are unchanged. REST state created wi
 
 ## Verification and limits
 
+The IP service and reverse proxy feature branch adds configuration-driven
+service imports with stable name-based IDs, static-service filtering and the
+`reverse-proxy` listener. One service resource manages one built-in service;
+changing its selector replaces the managed resource. The new
+`routeros_ip_reverse_proxy` resource manages static rules with IPv4 or IPv6
+backends, certificate fallback, CRUD and imports. Dynamic container-app rules
+remain owned by RouterOS. Rule-level VRF is omitted because RouterOS 7.24.2
+ignored it in native probes.
+
+Service import failed before the fix and passed afterward with an empty
+follow-up plan. Native rule create, IPv6 update, SNI import, external deletion,
+recreation, unchanged plans and destroy passed on RouterOS 7.24.2. Actual HTTPS
+requests with verified certificates reached IPv4 and IPv6 loopback HTTP
+backends, covering both listener certificate fallback and a rule certificate.
+All static service settings were restored, and owned rules, certificates and
+uploaded files were removed. These tests do not establish cross-VRF forwarding
+or coverage of older firmware and unsupported hardware.
+
 Offline Go tests, schema validation, vet, race checks for Bogon regressions and build pass. Regression tests cover the selected DHCP, address-list, parser and diff-comparison fixes. REST lifecycle fixtures cover MLAG on 7.21.5, 7.22.3, 7.23.7 and 7.24.5, WiFi omission/retry and CAPsMAN failure paths. REST wire tests verify CRUD, command suffixes, authentication, TLS and native command response IDs. Bogon tests use the actual built provider and OpenTofu 1.13.0; the MLAG test exercises apply, unchanged plan, native priority drift, correction and destroy.
 
 The additional fixes were also tested sequentially over REST against a RouterOS 7.24.2 CHR test VM, with before/after reproduction, native readback, empty final plans and probe cleanup. [LIVE_VERIFICATION.md](LIVE_VERIFICATION.md) records the evidence and limits. WiFi profile inheritance and unset behavior are verified natively; CHR has no radios, so physical WiFi interface lifecycle, radio traffic and MLAG failover remain unverified. The multi-version fixtures establish API contracts rather than live coverage of those firmware versions. Current [MLAG documentation](https://help.mikrotik.com/docs/spaces/ROS/pages/67633179/Multi-chassis+Link+Aggregation+Group), [WiFi CLI reference](https://manual.mikrotik.com/docs/cli-reference/interface/wifi/datapath/) and [RouterOS changelogs](https://mikrotik.com/download/changelogs) describe the relevant interfaces. Newer versions should be checked against native observations before deployment.

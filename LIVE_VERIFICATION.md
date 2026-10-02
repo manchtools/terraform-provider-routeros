@@ -54,6 +54,37 @@ The update selects gRPC 1.83.2, x/crypto 0.56.0, x/net 0.58.0, x/text 0.41.0 and
 
 The final scan reports no affected imported packages or reachable symbols. One module-only advisory remains for the unused, deprecated `golang.org/x/crypto/openpgp` package, which has no fixed version; no OpenPGP package is imported by this repository. See the [Go advisory](https://pkg.go.dev/vuln/GO-2026-5932). Dependency verification and scans are not a complete audit of every upstream dependency change.
 
+## IP service imports and reverse proxy (2026-10-02)
+
+The baseline service importer failed a real OpenTofu 1.13.0 `import` block for
+the existing SSH service. It resolved `ssh` to `*4` and then queried by name,
+returning "Cannot import non-existent remote object". The fixed importer retained
+`id=ssh` and `numbers=ssh`; the import plan contained no device changes and the
+follow-up plan was empty. Offline regressions also cover internal IDs, attribute
+selectors, dynamic connection duplicates, ambiguous matches and missing services.
+
+The CHR ran RouterOS 7.24.2. An isolated reverse proxy listener on port 18443
+used a temporary self-signed certificate trusted explicitly by the HTTPS client.
+Verified HTTPS requests reached the router's own HTTP REST server through both
+IPv4 (`127.0.0.1`) and IPv6 (`::1`) backends. The initial rule used certificate
+`none` to inherit the listener certificate; the updated rule referenced the
+certificate explicitly. Native readback matched both configurations.
+
+OpenTofu create, IPv6 update with equivalent address spelling, comment removal,
+SNI import, external deletion, recreation and destroy passed. Plans after create,
+update, import and recreation were empty. Static service settings were restored
+exactly; owned rules, certificates and uploaded files were removed. Provider
+tests pass with the race detector, and vet passes. Documentation was generated
+from the built provider schema with tfplugindocs. The exported registry key was
+adapted for that tool; schema content was unchanged.
+
+Rule-level `vrf` was ignored in native probes and is not exposed by the new
+resource. Listener VRF remains available through `routeros_ip_service`.
+Loopback backend tests establish actual IPv4 and IPv6 HTTP forwarding but do not
+prove cross-VRF routing or external backend reachability. Dynamic container-rule
+ownership is covered by REST contract tests; no container app was installed.
+Older firmware and SMIPS hardware were not tested.
+
 ## REST-only migration
 
 Baseline is revision 5 at `6f13c6803810d55cf6f14b1fb0adfa51d0ef1050`. Before removal, endpoint tests reproduced binary connection attempts, an unsupported-scheme panic, invalid endpoints accepted with an explicit version, and doubled `/rest` paths. Revision 6 accepts HTTP/HTTPS, bare hosts, IPv6 and optional REST/proxy prefixes; rejected schemes produce actionable diagnostics. HTTP fixtures exercise Basic Auth/version discovery, verified HTTPS with an explicit CA, default rejection of an untrusted CA, explicit insecure TLS and conflicting options.
