@@ -92,9 +92,10 @@ func ResourceRoutingBgpVpn() *schema.Resource {
 		},
 		KeyInactive: PropInactiveRo,
 		"instance": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "Name of the instance this VPN is assigned to.",
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "Name of the instance this VPN is assigned to. Required on RouterOS 7.20 and later.",
+			DiffSuppressFunc: AlwaysPresentNotUserProvided,
 		},
 		"label_allocation_policy": {
 			Type:             schema.TypeString,
@@ -114,9 +115,9 @@ func ResourceRoutingBgpVpn() *schema.Resource {
 	}
 
 	return &schema.Resource{
-		CreateContext: DefaultCreate(resSchema),
+		CreateContext: DefaultValidateCreate(resSchema, validateBGPInstance(false)),
 		ReadContext:   DefaultRead(resSchema),
-		UpdateContext: DefaultUpdate(resSchema),
+		UpdateContext: DefaultValidateUpdate(resSchema, validateBGPInstance(false)),
 		DeleteContext: DefaultDelete(resSchema),
 
 		Importer: &schema.ResourceImporter{

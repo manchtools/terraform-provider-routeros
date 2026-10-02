@@ -303,7 +303,7 @@ func ResourceRoutingBgpConnection() *schema.Resource {
 		"instance": {
 			Type:             schema.TypeString,
 			Optional:         true,
-			Description:      "Name of the instance this VPN is assigned to.",
+			Description:      "Name of the BGP instance. Required on RouterOS 7.20 and later unless inherited from connection templates.",
 			DiffSuppressFunc: AlwaysPresentNotUserProvided,
 		},
 		"keepalive_time": {
@@ -598,9 +598,9 @@ func ResourceRoutingBgpConnection() *schema.Resource {
 		Description: "> [!WARNING] Using this resource you may happen unexpected behavior, for example, some of the attributes " +
 			"may not be removable after adding them to the TF configuration. Please report this to GitHub and it " +
 			"may be possible to fix it. Use the resource at your own risk as it is!",
-		CreateContext: DefaultCreate(resSchema),
+		CreateContext: DefaultValidateCreate(resSchema, validateBGPInstance(true)),
 		ReadContext:   DefaultRead(resSchema),
-		UpdateContext: DefaultUpdate(resSchema),
+		UpdateContext: DefaultValidateUpdate(resSchema, validateBGPInstance(true)),
 		DeleteContext: DefaultDelete(resSchema),
 
 		Importer: &schema.ResourceImporter{
