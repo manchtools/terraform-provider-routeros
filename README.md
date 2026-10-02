@@ -87,7 +87,7 @@ the development override bypasses registry installation.
 
 All fork branches were reviewed before consolidation. See
 [BRANCH_REVIEW.md](BRANCH_REVIEW.md) for retained changes, exclusions and the
-archive tags preserving retired branch tips.
+deletion of the retired branches.
 
 ### Fixing RouterOS property drift
 

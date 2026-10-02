@@ -72,8 +72,8 @@ The additional fixes were also tested sequentially over REST against a RouterOS 
 
 `main` is the supported default branch. [BRANCH_REVIEW.md](BRANCH_REVIEW.md)
 records every branch reviewed on 2026-10-02, including excluded regressions and
-archive tags. Revision 7 retains revision 6 REST behavior and adds service imports,
-static reverse proxy rules, firmware-aware RSA key paths and OpenVPN server
+retired branch deletion. Revision 7 retains revision 6 REST behavior and adds
+service imports, static reverse proxy rules, firmware-aware RSA key paths and OpenVPN server
 lifecycle, modern BGP instance validation, corrected importer output and updated
 documentation/testing dependencies. The obsolete SSH `allow_none_crypto` property
 is removed; use `ciphers` or `strong_crypto`. Omitted crypto settings no longer

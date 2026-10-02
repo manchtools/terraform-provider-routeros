@@ -70,13 +70,12 @@ formatting, module integrity and a static build. The old duplicate Go 1.25 cache
 workflow was removed. Formatting was normalized; the drift generator now checks
 errors and emits formatted Go without truncating output on malformed input.
 
-## Preserving retired branches
+## Retired branches
 
-Each non-main reviewed tip is preserved under
-`archive/2026-10-02/<original-branch-name>` before its branch is removed.
-Original history and upstream release tags remain. Rejected branch code is
-recoverable through these archive tags but is not part of stable `main`.
-The original main tip remains an ancestor of the consolidated main.
+All 14 non-main branch refs were deleted after the required changes were
+merged or adapted. No archive tags retain those branch tips. Original merged
+history and existing release tags remain. The original main tip remains an
+ancestor of consolidated main.
 
 ## Evidence and limits
 
