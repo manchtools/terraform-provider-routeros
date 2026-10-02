@@ -124,3 +124,10 @@ preserve MLAG import/teardown and WiFi inheritance guidance across regeneration.
 The drift generator reproduces formatted source and rejects malformed input
 without truncating existing output. No application, router or Proxmox guest was
 started or changed during these consolidation checks.
+
+Final importer initialization testing also reproduced a version-resolution
+failure: `~> 1` excludes the fork's prerelease packages. Generated configuration
+now selects the mirrored `1.99.1-bogon.7` explicitly. OpenTofu initialization
+passed against the verified filesystem mirror; a regression covers the generated
+version constraint. This tooling correction follows the revision 7 tag and does
+not change the provider executable.

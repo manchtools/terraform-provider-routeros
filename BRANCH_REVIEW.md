@@ -57,8 +57,10 @@ The Ethernet acceptance assertion checks interface identity rather than assuming
 a link is running. Clock date changes and physical offload claims were excluded.
 
 The importer helper keeps its existing quoting, identity and timeout handling.
-Generated configuration now uses `manchtools/routeros` and an unquoted resource
-traversal in `import.to`.
+Generated configuration now uses `manchtools/routeros`, explicitly selects the
+mirrored fork version, and uses an unquoted resource traversal in `import.to`.
+OpenTofu initialization rejects the old `~> 1` constraint because it excludes
+the fork's prerelease version. Explicit revision 7 initialization passes.
 
 Dependency patches were reimplemented on the current module graph, preserving
 the newer grpc and x/crypto selections. The docs/testing upgrades include
