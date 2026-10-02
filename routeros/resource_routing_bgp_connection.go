@@ -71,7 +71,7 @@ func ResourceRoutingBgpConnection() *schema.Resource {
 		MetaId:             PropId(Id),
 		MetaSetUnsetFields: PropSetUnsetFields("hold_time", "keepalive_time"),
 
-		"add_path_out": {Type: schema.TypeString, Computed: true, Description: "Observed legacy add-path policy before RouterOS 7.22."},
+		"add_path_out": {Type: schema.TypeString, Computed: true, Description: "Observed legacy add-path policy before RouterOS 7.22. Use input.add_path and output.add_path on newer firmware."},
 		"address_families": {
 			Type:     schema.TypeString,
 			Optional: true,

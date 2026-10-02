@@ -1,6 +1,6 @@
 # Bogon fork scope and review
 
-This fork builds `manchtools/routeros` version `1.99.1-bogon.6` for Bogon. The baseline is upstream main at `0d8c069c20a012300dfeeb96cb343ad7a5e7ebfb`. It keeps upstream history and the MPL 2.0 license. Bogon pins a commit and archive checksum, builds an unsigned executable and installs it through a local OpenTofu mirror. Registry publication, signed releases and state migrations are deferred.
+This fork builds `manchtools/routeros` version `1.99.1-bogon.7` for Bogon. The baseline is upstream main at `0d8c069c20a012300dfeeb96cb343ad7a5e7ebfb`. It keeps upstream history and the MPL 2.0 license. Bogon pins a commit and archive checksum, builds an unsigned executable and installs it through a local OpenTofu mirror. Registry publication, signed releases and state migrations are deferred.
 
 ## Reviewed upstream contributions
 
@@ -46,7 +46,7 @@ Resource/data source schemas and native IDs are unchanged. REST state created wi
 
 ## Verification and limits
 
-The IP service and reverse proxy feature branch adds configuration-driven
+The consolidated main branch includes configuration-driven
 service imports with stable name-based IDs, static-service filtering and the
 `reverse-proxy` listener. One service resource manages one built-in service;
 changing its selector replaces the managed resource. The new
@@ -67,3 +67,18 @@ or coverage of older firmware and unsupported hardware.
 Offline Go tests, schema validation, vet, race checks for Bogon regressions and build pass. Regression tests cover the selected DHCP, address-list, parser and diff-comparison fixes. REST lifecycle fixtures cover MLAG on 7.21.5, 7.22.3, 7.23.7 and 7.24.5, WiFi omission/retry and CAPsMAN failure paths. REST wire tests verify CRUD, command suffixes, authentication, TLS and native command response IDs. Bogon tests use the actual built provider and OpenTofu 1.13.0; the MLAG test exercises apply, unchanged plan, native priority drift, correction and destroy.
 
 The additional fixes were also tested sequentially over REST against a RouterOS 7.24.2 CHR test VM, with before/after reproduction, native readback, empty final plans and probe cleanup. [LIVE_VERIFICATION.md](LIVE_VERIFICATION.md) records the evidence and limits. WiFi profile inheritance and unset behavior are verified natively; CHR has no radios, so physical WiFi interface lifecycle, radio traffic and MLAG failover remain unverified. The multi-version fixtures establish API contracts rather than live coverage of those firmware versions. Current [MLAG documentation](https://help.mikrotik.com/docs/spaces/ROS/pages/67633179/Multi-chassis+Link+Aggregation+Group), [WiFi CLI reference](https://manual.mikrotik.com/docs/cli-reference/interface/wifi/datapath/) and [RouterOS changelogs](https://mikrotik.com/download/changelogs) describe the relevant interfaces. Newer versions should be checked against native observations before deployment.
+
+## Stable main consolidation
+
+`main` is the supported default branch. [BRANCH_REVIEW.md](BRANCH_REVIEW.md)
+records every branch reviewed on 2026-10-02, including excluded regressions and
+archive tags. Revision 7 retains revision 6 REST behavior and adds service imports,
+static reverse proxy rules, firmware-aware RSA key paths and OpenVPN server
+lifecycle, modern BGP instance validation, corrected importer output and updated
+documentation/testing dependencies. The obsolete SSH `allow_none_crypto` property
+is removed; use `ciphers` or `strong_crypto`. Omitted crypto settings no longer
+block unrelated SSH configuration. Existing name-based service IDs remain stable.
+
+CI targets `main` and checks all Go packages, race behavior, vet, formatting,
+module integrity and a static build. The duplicate cache workflow with an outdated
+Go version is removed. Signed releases and registry publication remain deferred.
