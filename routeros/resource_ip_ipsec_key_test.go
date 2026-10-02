@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testIpIpsecKey = "routeros_ip_ipsec_key.test"
@@ -19,13 +20,32 @@ func TestAccIpIpsecKeyTest_basic(t *testing.T) {
 					testSetTransportEnv(t, name)
 				},
 				ProviderFactories: testAccProviderFactories,
-				CheckDestroy:      testCheckResourceDestroy("/ip/ipsec/key", "routeros_ip_ipsec_key"),
+				CheckDestroy: func(state *terraform.State) error {
+					runtimeSchema, err := ipsecKeyResourceSchema(ResourceIpIpsecKey().Schema)
+					if err != nil {
+						return err
+					}
+					return testCheckResourceDestroy(GetMetadata(runtimeSchema).Path, "routeros_ip_ipsec_key")(state)
+				},
 				Steps: []resource.TestStep{
 					{
-						Config: testAccIpIpsecKeyConfig(),
+						Config: testAccIpIpsecKeyConfig("test-key"),
 						Check: resource.ComposeTestCheckFunc(
 							testResourcePrimaryInstanceId(testIpIpsecKey),
 							resource.TestCheckResourceAttr(testIpIpsecKey, "name", "test-key"),
+							resource.TestCheckResourceAttr(testIpIpsecKey, "key_size", "2048"),
+						),
+					},
+					{
+						ResourceName:      testIpIpsecKey,
+						ImportState:       true,
+						ImportStateVerify: true,
+					},
+					{
+						Config: testAccIpIpsecKeyConfig("renamed-key"),
+						Check: resource.ComposeTestCheckFunc(
+							testResourcePrimaryInstanceId(testIpIpsecKey),
+							resource.TestCheckResourceAttr(testIpIpsecKey, "name", "renamed-key"),
 							resource.TestCheckResourceAttr(testIpIpsecKey, "key_size", "2048"),
 						),
 					},
@@ -35,12 +55,12 @@ func TestAccIpIpsecKeyTest_basic(t *testing.T) {
 	}
 }
 
-func testAccIpIpsecKeyConfig() string {
+func testAccIpIpsecKeyConfig(name string) string {
 	return fmt.Sprintf(`%v
 
 resource "routeros_ip_ipsec_key" "test" {
-  name     = "test-key"
+  name     = %q
   key_size = 2048
 }
-`, providerConfig)
+`, providerConfig, name)
 }
