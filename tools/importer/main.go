@@ -32,7 +32,7 @@ var (
 	providerTemplate = `terraform {
   required_providers {
     routeros = {
-      source  = "terraform-routeros/routeros"
+      source  = "manchtools/routeros"
       version = "~> 1"
     }
   }
@@ -48,7 +48,7 @@ provider "routeros" {
 `
 
 	importTemplate = `import {
-  to = "%v.%v"
+  to = %v.%v
   id = "%v"
 }
 `
