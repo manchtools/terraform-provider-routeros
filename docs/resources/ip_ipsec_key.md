@@ -1,5 +1,4 @@
 # routeros_ip_ipsec_key (Resource)
-
 Manages an IPsec RSA key. Uses /ip/ipsec/key/rsa on RouterOS 7.20 and newer, and /ip/ipsec/key on older firmware.
 
 The resource generates an RSA key and selects the native menu from the connected

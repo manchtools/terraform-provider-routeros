@@ -3,6 +3,11 @@
 
 ## Example Usage
 ```terraform
+resource "routeros_routing_bgp_instance" "example" {
+  name = "example-bgp"
+  as   = "64512"
+}
+
 resource "routeros_routing_bgp_vpn" "test" {
   disabled = false
   export {
@@ -12,6 +17,7 @@ resource "routeros_routing_bgp_vpn" "test" {
   import {
     route_targets = ["1:2"]
   }
+  instance                = routeros_routing_bgp_instance.example.name
   label_allocation_policy = "per-vrf"
   name                    = "bgp-mpls-vpn-test"
   route_distinguisher     = "1.2.3.4:1"
@@ -32,7 +38,7 @@ resource "routeros_routing_bgp_vpn" "test" {
 - `disabled` (Boolean)
 - `export` (Block List, Max: 1) A group of parameters associated with the route export. (see [below for nested schema](#nestedblock--export))
 - `import` (Block List, Max: 1) A group of parameters associated with the route import. (see [below for nested schema](#nestedblock--import))
-- `instance` (String) Name of the instance this VPN is assigned to.
+- `instance` (String) Name of the instance this VPN is assigned to. Required on RouterOS 7.20 and later.
 - `label_allocation_policy` (String) Label allocationpolicy.
 - `vrf` (String) The VRF table this resource operates on.
 

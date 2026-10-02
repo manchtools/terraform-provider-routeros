@@ -51,8 +51,7 @@ resource "routeros_routing_bgp_template" "test" {
 
 ### Read-Only
 
-- `add_path_out` (String) Observed legacy add-path policy before RouterOS 7.22. Use `input.add_path` and `output.add_path` on newer firmware.
-
+- `add_path_out` (String) Observed legacy add-path policy before RouterOS 7.22. Use input.add_path and output.add_path on newer firmware.
 - `default` (Boolean) It's the default item.
 - `id` (String) The ID of this resource.
 

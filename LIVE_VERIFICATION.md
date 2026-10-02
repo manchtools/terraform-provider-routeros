@@ -92,3 +92,35 @@ Baseline is revision 5 at `6f13c6803810d55cf6f14b1fb0adfa51d0ef1050`. Before rem
 The binary driver, protocol types and branches are removed. REST command suffixes, JSON query arrays and native `ret` IDs are retained and tested. The actual OpenTofu exports show identical resource and data source schemas before and after removal. Existing WiFi and ordering states created with revision 5 yielded empty revision 6 plans and retained IDs. Native updates, WiFi inheritance/unset and rule reordering succeeded and were cleaned up.
 
 Live OpenTofu create/update/empty-plan/destroy tests on RouterOS 7.24.2 also cover a disabled isolated bridge, IPv4/IPv6 addresses, disabled firewall rule, disabled routing table, an owned small text file, and a harmless script. Native script run counters confirmed `/run` executed on create and update; file destruction verifies `/file/remove`. The endpoint included `/rest/`, so native version discovery and prefix normalization were exercised. No management setting, binary API service or user policy was modified. Certificate/container/physical switch paths are preserved and inspected but are not newly live-tested here; physical radio and MLAG limitations remain.
+
+## Main consolidation checks (2026-10-02)
+
+All 15 remote branches were reviewed; [BRANCH_REVIEW.md](BRANCH_REVIEW.md)
+records their immutable tips and decisions. Useful changes were adapted on top
+of the existing Bogon and service/proxy commits rather than restoring obsolete
+schemas, CI or dependency versions.
+
+New failing-before regressions cover IPsec RSA menu routing, OpenVPN native
+entry lifecycle, mandatory modern BGP instances, omitted VPN instance state,
+SSH crypto validation and generated importer configuration. Versioned REST
+fixtures pass lifecycle/import tests and preserve state after failures. Full
+Go race tests, vet, module verification, formatting and a static build pass.
+The dependency scan found no affected imported packages or reachable symbols;
+one advisory exists only in required modules without affected imported code.
+
+The actual OpenTofu 1.13.0 executable also exercised OpenVPN through a local REST
+fixture using real provider version discovery for 7.24.2 and 7.16.2. Enabled and
+disabled aliases, neither attribute configured, alias switching, port updates,
+configuration-driven imports and teardown passed. All 26 follow-up plans were
+empty. Imports performed reads only. Modern destroy removed the owned entry;
+legacy destroy retained singleton settings. This establishes planning/state and
+native request contracts, not firmware execution or VPN traffic.
+
+Bogon's generated intent and onboarding configurations passed actual provider
+compatibility checks with the consolidated executable. Normal documentation
+generation succeeded using terraform-plugin-docs 0.25.0; its dependency update
+fixed the installer verification-key error encountered previously. Templates now
+preserve MLAG import/teardown and WiFi inheritance guidance across regeneration.
+The drift generator reproduces formatted source and rejects malformed input
+without truncating existing output. No application, router or Proxmox guest was
+started or changed during these consolidation checks.

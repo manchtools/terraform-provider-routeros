@@ -1,7 +1,9 @@
 # routeros_wifi_configuration (Resource)
-
-Inline profile maps contain direct settings only. Values inherited through a `config` reference remain managed by the referenced profile. Removing a map key unsets the direct override; removing `config` releases that profile reference.
 *<span style="color:red">This resource requires a minimum version of RouterOS 7.13.</span>*
+
+Inline profile maps contain direct settings only. Values inherited through a
+`config` reference remain managed by the referenced profile. Removing a map key
+unsets the direct override; removing `config` releases that profile reference.
 
 ## Example Usage
 ```terraform
@@ -94,7 +96,6 @@ resource "routeros_wifi_configuration" "configuration1" {
 - `id` (String) The ID of this resource.
 
 ## Import
-Import is supported using the following syntax:
 ```shell
 #The ID can be found via API or the terminal
 #The command for the terminal is -> :put [/interface/wifi/configuration get [print show-ids]]

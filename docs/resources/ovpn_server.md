@@ -1,7 +1,6 @@
 # routeros_ovpn_server (Resource)
 Manages OpenVPN server configuration on RouterOS 7.8 and newer. RouterOS 7.17 and newer use named server entries with native IDs and ordinary CRUD. Older versions have a singleton whose deletion only removes it from state.
 
-
 On RouterOS 7.17 and newer, each resource owns one named server entry. Creation
 adds that entry, refresh and updates use its native ID, and destroy removes it.
 Use distinct names and listening ports when configuring several servers. Import

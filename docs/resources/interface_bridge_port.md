@@ -50,6 +50,7 @@ resource "routeros_interface_bridge_port" "bridge_port" {
 
 ### Read-Only
 
+- `actual_path_cost` (Number) Shows the actual port path-cost. Either manually applied or automatically determined based on the interface speed and the port-cost-mode setting.
 - `designated_bridge` (String) Root bridge ID (bridge priority and the bridge MAC address).
 - `designated_bridge_id` (String) Shows the designated bridge identifier, as determined from the port's priority vector.
 - `designated_cost` (String) Designated cost.

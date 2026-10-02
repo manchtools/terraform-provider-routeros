@@ -3,13 +3,21 @@
 
 ## Example Usage
 ```terraform
+resource "routeros_routing_bgp_instance" "example" {
+  name = "example-bgp"
+  as   = "65550"
+}
+
 resource "routeros_routing_bgp_connection" "test" {
-  name         = "neighbor-test"
-  as           = "65550/5"
-  as_override  = true
+  name     = "neighbor-test"
+  as       = "65550"
+  instance = routeros_routing_bgp_instance.example.name
+  output {
+    as_override = true
+  }
   remote {
     address = "172.17.0.1"
-    as      = "12345/5"
+    as      = "12345"
   }
   local {
     role = "ebgp"
@@ -35,7 +43,7 @@ resource "routeros_routing_bgp_connection" "test" {
 - `disabled` (Boolean)
 - `hold_time` (String) Specifies the BGP Hold Time value to use when negotiating with peers. According to the BGP specification, if the router does not receive successive KEEPALIVE and/or UPDATE and/or NOTIFICATION messages within the period specified in the Hold Time field of the OPEN message, then the BGP connection to the peer will be closed. The minimal hold-time value of both peers will be actually used (note that the special value 0 or 'infinity' is lower than any other value) infinity - never expire the connection and never send keepalive messages.
 - `input` (Block List, Max: 1) A group of parameters associated with BGP input. (see [below for nested schema](#nestedblock--input))
-- `instance` (String) Name of the instance this VPN is assigned to.
+- `instance` (String) Name of the BGP instance. Required on RouterOS 7.20 and later unless inherited from connection templates.
 - `keepalive_time` (String) How long to keep the BGP session open after the last received 'keepalive' message.
 - `listen` (Boolean) Whether to listen for incoming connections.
 - `local` (Block List, Max: 1) A group of parameters associated with BGP input. (see [below for nested schema](#nestedblock--local))
@@ -53,8 +61,7 @@ resource "routeros_routing_bgp_connection" "test" {
 
 ### Read-Only
 
-- `add_path_out` (String) Observed legacy add-path policy before RouterOS 7.22. Use `input.add_path` and `output.add_path` on newer firmware.
-
+- `add_path_out` (String) Observed legacy add-path policy before RouterOS 7.22. Use input.add_path and output.add_path on newer firmware.
 - `id` (String) The ID of this resource.
 - `inactive` (Boolean)
 
