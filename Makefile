@@ -5,12 +5,12 @@ ifeq ($(OS),Windows_NT)
 	EXT := .exe
 endif
 
-.PHONY: docs debug
+.PHONY: docs debug test
 
 all: docs tfformat compile checksum clean
 
 test:
-	go test -timeout 30s github.com/manchtools/terraform-provider-routeros
+	go test -mod=readonly ./...
 
 docs:
 	go generate ./...

@@ -22,8 +22,8 @@ import (
 // https://help.mikrotik.com/docs/display/ROS/Container
 func ResourceInterfaceVeth() *schema.Resource {
 	resSchema := map[string]*schema.Schema{
-		MetaResourcePath:   PropResourcePath("/interface/veth"),
-		MetaId:             PropId(Id),
+		MetaResourcePath: PropResourcePath("/interface/veth"),
+		MetaId:           PropId(Id),
 
 		"address": {
 			Type:        schema.TypeSet,

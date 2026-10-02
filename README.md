@@ -2,7 +2,7 @@
 
 A Bogon-focused fork of [terraform-routeros/terraform-provider-routeros](https://github.com/terraform-routeros/terraform-provider-routeros), based on upstream main at `0d8c069c20a012300dfeeb96cb343ad7a5e7ebfb`.
 
-The source address is `manchtools/routeros`. Bogon builds version `1.99.1-bogon.6` into a local OpenTofu filesystem mirror; this fork has no registry publication or signed release pipeline. See [BOGON.md](BOGON.md) for scope, upstream contributions and verification limits.
+The source address is `manchtools/routeros`. `main` is the stable default branch. Bogon builds version `1.99.1-bogon.7` into a local OpenTofu filesystem mirror; this fork has no registry publication or signed release pipeline. See [BOGON.md](BOGON.md) for scope, upstream contributions and verification limits.
 
 ## Purpose
 
@@ -49,54 +49,49 @@ You are welcome!
 
 ### Testing
 
-You can build the provider locally to test fixes by following these intructions:
-- Build and copy the provider where Terraform reads it
-```
-go build *.go && \
-mkdir -p ~/.terraform.d/plugins/terraform.local/local/routeros/1.0.0/$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m) && \
-mv main ~/.terraform.d/plugins/terraform.local/local/routeros/1.0.0/$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)/terraform-provider-routeros_v1.0.0
-```
-- Change provider from 
-```hcl
-required_providers {
-  routeros = {
-    source  = "terraform-routeros/routeros"
-    version = "1.85.1"
-  }
-}
+Run the offline provider checks with Go 1.26.6 or newer:
+
+```sh
+make test
+go test -mod=readonly -race ./...
+go vet ./...
 ```
 
-to
-```hcl
-required_providers {
-  routeros = {
-    source  = "terraform.local/local/routeros"
-    version = "1.0.0"
-  }
-}
+Live acceptance tests require an isolated RouterOS device and `TF_ACC=1`.
+See [LIVE_VERIFICATION.md](LIVE_VERIFICATION.md) for completed native checks and
+hardware limitations. CI runs offline tests, race checks, vet, module verification,
+formatting and a static build on pushes and pull requests to `main`.
+
+For local OpenTofu or Terraform development, build the provider:
+
+```sh
+mkdir -p /tmp/routeros-dev
+go build -o /tmp/routeros-dev/terraform-provider-routeros .
 ```
-- Clean your providers, init and apply
-- Alternatively, you can edit/create ~/.terraformrc add add a provider installation block like:
+
+Point a CLI configuration file at that directory:
+
 ```hcl
 provider_installation {
   dev_overrides {
-     "terraform-routeros/routeros" = "/path/to/your/git/clone"
+    "manchtools/routeros" = "/tmp/routeros-dev"
   }
-
-  direct {
-  }
+  direct {}
 }
 ```
 
-and then build the provider using
-```
-go build -o terraform-provider-routeros *.go
-```
-in order for Terraform to find it.
+Set `TF_CLI_CONFIG_FILE` to the configuration file when running plans or applies.
+Keep the resource configuration's provider source as `manchtools/routeros`.
+Bogon's build script creates an immutable filesystem mirror for normal builds;
+the development override bypasses registry installation.
+
+All fork branches were reviewed before consolidation. See
+[BRANCH_REVIEW.md](BRANCH_REVIEW.md) for retained changes, exclusions and the
+archive tags preserving retired branch tips.
 
 ### Fixing RouterOS property drift
 
-Sometimes RouterOS might introduce a breaking change on a property. You can easilfy contribute to the provider by following these intructions:
+Sometimes RouterOS might introduce a breaking change on a property. Update property mappings using the generator:
 
 - Edit `routeros/mikrotik_resource_drift.yaml`. Add the resource used as well as the old property name and the new one
 - Perform the generator. It should edit file `routeros/mikrotik_resource_drift.go`.

@@ -89,9 +89,9 @@ func ResourceDhcpServer() *schema.Resource {
 			Description: "Use custom set of DHCP options defined in option sets menu.",
 		},
 		"dynamic_lease_identifiers": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Computed:    true,
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
 			Description: "Dynamic lease identifier. RouterOS requires at least one identifier on modify, " +
 				"so this field is preserved (DiffSuppressed) when not set in user config — clearing it " +
 				"would cause apply to error with \"at least one dynamic lease identifier should be specified\".",

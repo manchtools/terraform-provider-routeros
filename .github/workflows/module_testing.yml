@@ -1,21 +1,28 @@
 name: Provider checks
 on:
   push:
-    branches: [bogon]
+    branches: [main]
   pull_request:
-    branches: [bogon]
+    branches: [main]
+  workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: provider-checks-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
           cache: true
+      - run: test -z "$(git ls-files -z '*.go' | xargs -0 gofmt -l)"
+      - run: go mod verify
       - run: go test -mod=readonly ./...
-      - run: go test -mod=readonly -race ./routeros -run '^TestBogon'
+      - run: go test -mod=readonly -race ./...
       - run: go vet ./...
-      - run: go build -mod=readonly .
+      - run: CGO_ENABLED=0 go build -mod=readonly .
