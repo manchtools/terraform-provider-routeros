@@ -48,6 +48,18 @@ func ResourceInterfaceBridge() *schema.Resource {
 			Type:     schema.TypeBool,
 			Optional: true,
 		},
+		"dhcpv6_snooping": {
+			Type:             schema.TypeBool,
+			Optional:         true,
+			Computed:         true,
+			Description:      "Enables DHCPv6 snooping on the bridge. When omitted, preserves the RouterOS setting.",
+			DiffSuppressFunc: AlwaysPresentNotUserProvided,
+		},
+		"managed": {
+			Type:        schema.TypeBool,
+			Computed:    true,
+			Description: "Whether the bridge is managed by RouterOS.",
+		},
 		KeyDisabled: PropDisabledRw,
 		KeyDynamic:  PropDynamicRo,
 		"ether_type": {

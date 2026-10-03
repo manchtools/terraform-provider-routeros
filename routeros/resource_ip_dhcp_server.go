@@ -16,6 +16,13 @@ func ResourceDhcpServer() *schema.Resource {
 			Optional:    true,
 			Description: "Whether to add dynamic ARP entry. ",
 		},
+		"add_dns_entries_suffix": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Computed:         true,
+			Description:      "Domain suffix appended to client names in dynamic DNS entries. When omitted, preserves the RouterOS setting.",
+			DiffSuppressFunc: AlwaysPresentNotUserProvided,
+		},
 		"address_pool": {
 			Type:     schema.TypeString,
 			Optional: true,
@@ -89,9 +96,9 @@ func ResourceDhcpServer() *schema.Resource {
 			Description: "Use custom set of DHCP options defined in option sets menu.",
 		},
 		"dynamic_lease_identifiers": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Computed:    true,
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
 			Description: "Dynamic lease identifier. RouterOS requires at least one identifier on modify, " +
 				"so this field is preserved (DiffSuppressed) when not set in user config — clearing it " +
 				"would cause apply to error with \"at least one dynamic lease identifier should be specified\".",

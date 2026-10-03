@@ -77,6 +77,8 @@ func bogonResourceData(t *testing.T, res *schema.Resource, config map[string]int
 		switch value := value.(type) {
 		case string:
 			attrs[name] = cty.StringVal(value)
+		case bool:
+			attrs[name] = cty.BoolVal(value)
 		case []string:
 			items := make([]cty.Value, len(value))
 			for i, item := range value {

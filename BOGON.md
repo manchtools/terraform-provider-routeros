@@ -1,6 +1,6 @@
 # Bogon fork scope and review
 
-This fork builds `manchtools/routeros` version `1.99.1-bogon.6` for Bogon. The baseline is upstream main at `0d8c069c20a012300dfeeb96cb343ad7a5e7ebfb`. It keeps upstream history and the MPL 2.0 license. Bogon pins a commit and archive checksum, builds an unsigned executable and installs it through a local OpenTofu mirror. Registry publication, signed releases and state migrations are deferred.
+This fork builds `manchtools/routeros` version `1.99.1-bogon.6.1` for Bogon. The baseline is upstream main at `0d8c069c20a012300dfeeb96cb343ad7a5e7ebfb`. It keeps upstream history and the MPL 2.0 license. Bogon pins a commit and archive checksum, builds an unsigned executable and installs it through a local OpenTofu mirror. Registry publication, signed releases and state migrations are deferred.
 
 ## Reviewed upstream contributions
 
@@ -49,3 +49,7 @@ Resource/data source schemas and native IDs are unchanged. REST state created wi
 Offline Go tests, schema validation, vet, race checks for Bogon regressions and build pass. Regression tests cover the selected DHCP, address-list, parser and diff-comparison fixes. REST lifecycle fixtures cover MLAG on 7.21.5, 7.22.3, 7.23.7 and 7.24.5, WiFi omission/retry and CAPsMAN failure paths. REST wire tests verify CRUD, command suffixes, authentication, TLS and native command response IDs. Bogon tests use the actual built provider and OpenTofu 1.13.0; the MLAG test exercises apply, unchanged plan, native priority drift, correction and destroy.
 
 The additional fixes were also tested sequentially over REST against a RouterOS 7.24.2 CHR test VM, with before/after reproduction, native readback, empty final plans and probe cleanup. [LIVE_VERIFICATION.md](LIVE_VERIFICATION.md) records the evidence and limits. WiFi profile inheritance and unset behavior are verified natively; CHR has no radios, so physical WiFi interface lifecycle, radio traffic and MLAG failover remain unverified. The multi-version fixtures establish API contracts rather than live coverage of those firmware versions. Current [MLAG documentation](https://help.mikrotik.com/docs/spaces/ROS/pages/67633179/Multi-chassis+Link+Aggregation+Group), [WiFi CLI reference](https://manual.mikrotik.com/docs/cli-reference/interface/wifi/datapath/) and [RouterOS changelogs](https://mikrotik.com/download/changelogs) describe the relevant interfaces. Newer versions should be checked against native observations before deployment.
+
+## RouterOS response fields (6.1)
+
+Revision `1.99.1-bogon.6.1` adds read-only `managed` flags for bridges, bridge ports and bridge VLAN entries, plus optional/computed bridge `dhcpv6_snooping`, port `trusted_dhcpv6` and DHCP server `add_dns_entries_suffix`. Omitted settings preserve native defaults; no defaults are sent to older RouterOS versions that do not return these fields. Unknown response fields continue to produce diagnostics. Regression tests replay RouterOS boolean and suffix responses, check read-only serialization and explicit settings, and validate the provider schema. This revision adds no live-router verification claim.
