@@ -1,6 +1,6 @@
 # Bogon fork scope and review
 
-This fork builds `manchtools/routeros` version `1.99.1-bogon.6.1` for Bogon. The baseline is upstream main at `0d8c069c20a012300dfeeb96cb343ad7a5e7ebfb`. It keeps upstream history and the MPL 2.0 license. Bogon pins a commit and archive checksum, builds an unsigned executable and installs it through a local OpenTofu mirror. Registry publication, signed releases and state migrations are deferred.
+This fork builds `manchtools/routeros` version `1.99.1-bogon.6.2` for Bogon. The baseline is upstream main at `0d8c069c20a012300dfeeb96cb343ad7a5e7ebfb`. It keeps upstream history and the MPL 2.0 license. Bogon pins a commit and archive checksum, builds an unsigned executable and installs it through a local OpenTofu mirror. Registry publication, signed releases and state migrations are deferred.
 
 ## Reviewed upstream contributions
 
@@ -53,3 +53,5 @@ The additional fixes were also tested sequentially over REST against a RouterOS 
 ## RouterOS response fields (6.1)
 
 Revision `1.99.1-bogon.6.1` adds read-only `managed` flags for bridges, bridge ports and bridge VLAN entries, plus optional/computed bridge `dhcpv6_snooping`, port `trusted_dhcpv6` and DHCP server `add_dns_entries_suffix`. Omitted settings preserve native defaults; no defaults are sent to older RouterOS versions that do not return these fields. Unknown response fields continue to produce diagnostics. Regression tests replay RouterOS boolean and suffix responses, check read-only serialization and explicit settings, and validate the provider schema. This revision adds no live-router verification claim.
+
+Revision `1.99.1-bogon.6.2` adds computed `jump_target` to IPv6 firewall data-source filter rules and optional/computed `client_allowed_address` to WireGuard peers. The latter controls generated client configuration, independently of the tunnel's `allowed_address`; omission preserves the native value without creating drift. Tests reproduce both missing-field diagnostics, verify empty and populated responses, and check explicit client export serialization. This revision adds no live-router verification claim.

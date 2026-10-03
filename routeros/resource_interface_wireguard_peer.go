@@ -21,6 +21,16 @@ func ResourceInterfaceWireguardPeer() *schema.Resource {
 				// ValidateFunc: ValidationIpAddress,
 			},
 		},
+		"client_allowed_address": {
+			Type:     schema.TypeList,
+			Optional: true,
+			Computed: true,
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+			Description:      "Allowed IPs included in the generated client configuration (RouterOS 7.21+). This does not change the peer's allowed_address setting.",
+			DiffSuppressFunc: AlwaysPresentNotUserProvided,
+		},
 		"client_address": {
 			Type:     schema.TypeString,
 			Optional: true,

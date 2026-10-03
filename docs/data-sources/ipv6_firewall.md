@@ -200,6 +200,7 @@ Read-Only:
 - `ingress_priority` (Number)
 - `invalid` (Boolean)
 - `ipsec_policy` (String)
+- `jump_target` (String)
 - `limit` (String)
 - `log` (Boolean)
 - `log_prefix` (String)
@@ -228,5 +229,3 @@ Read-Only:
 - `time` (String)
 - `tls_host` (String)
 - `ttl` (String)
-
-
