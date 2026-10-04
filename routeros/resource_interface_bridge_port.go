@@ -436,6 +436,18 @@ func ResourceInterfaceBridgePort() *schema.Resource {
 			Description:      "Whether to trust IPv6 Router Advertisements received on this port. Available in RouterOS starting from version 7.22.",
 			DiffSuppressFunc: AlwaysPresentNotUserProvided,
 		},
+		"managed": {
+			Type:        schema.TypeBool,
+			Computed:    true,
+			Description: "Whether the bridge port is managed by RouterOS.",
+		},
+		"trusted_dhcpv6": {
+			Type:             schema.TypeBool,
+			Optional:         true,
+			Computed:         true,
+			Description:      "Whether to forward DHCPv6 server packets received on this port when bridge DHCPv6 snooping is enabled. When omitted, preserves the RouterOS setting.",
+			DiffSuppressFunc: AlwaysPresentNotUserProvided,
+		},
 		"unknown_multicast_flood": {
 			Type:             schema.TypeBool,
 			Optional:         true,

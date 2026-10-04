@@ -33,6 +33,7 @@ resource "routeros_interface_bridge" "bridge" {
 - `auto_mac` (Boolean) Automatically select one MAC address of bridge ports as a bridge MAC address, bridge MAC will be chosen from the first added bridge port. After a device reboot, the bridge MAC can change depending on the port-number.
 - `comment` (String)
 - `dhcp_snooping` (Boolean)
+- `dhcpv6_snooping` (Boolean) Enables DHCPv6 snooping on the bridge. When omitted, preserves the RouterOS setting.
 - `disabled` (Boolean)
 - `ether_type` (String) This property only has effect when vlan-filtering is set to yes.
 - `fast_forward` (Boolean)
@@ -75,6 +76,7 @@ resource "routeros_interface_bridge" "bridge" {
 - `id` (String) The ID of this resource.
 - `l2mtu` (Number) Layer2 Maximum transmission unit. [See](https://wiki.mikrotik.com/wiki/Maximum_Transmission_Unit_on_RouterBoards).
 - `mac_address` (String) Current mac address.
+- `managed` (Boolean) Whether the bridge is managed by RouterOS.
 - `running` (Boolean)
 
 ## Import

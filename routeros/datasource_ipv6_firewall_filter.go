@@ -130,6 +130,10 @@ func getIPv6FirewallFilterSchema() *schema.Schema {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"jump_target": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				"limit": {
 					Type:     schema.TypeString,
 					Computed: true,

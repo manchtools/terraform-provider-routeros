@@ -51,6 +51,11 @@ func ResourceInterfaceBridgeVlan() *schema.Resource {
 		},
 		KeyDisabled: PropDisabledRw,
 		KeyDynamic:  PropDynamicRo,
+		"managed": {
+			Type:        schema.TypeBool,
+			Computed:    true,
+			Description: "Whether the bridge VLAN entry is managed by RouterOS.",
+		},
 		"mvrp_forbidden": {
 			Type:     schema.TypeList,
 			Optional: true,

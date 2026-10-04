@@ -53,6 +53,7 @@ resource "routeros_interface_bridge_vlan" "bridge_vlan" {
 - `current_untagged` (List of String)
 - `dynamic` (Boolean) Configuration item created by software, not by management interface. It is not exported, and cannot be directly modified.
 - `id` (String) The ID of this resource.
+- `managed` (Boolean) Whether the bridge VLAN entry is managed by RouterOS.
 
 ## Import
 Import is supported using the following syntax:

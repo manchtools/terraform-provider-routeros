@@ -30,7 +30,7 @@ func TestGeneratedProviderUsesFork(t *testing.T) {
 			if source := provider.GetAttr("source").AsString(); source != "manchtools/routeros" {
 				t.Fatalf("generated configuration selects provider %q instead of the fork", source)
 			}
-			if version := provider.GetAttr("version").AsString(); version != "1.99.1-bogon.7" {
+			if version := provider.GetAttr("version").AsString(); version != "1.99.1-bogon.7.1" {
 				t.Fatalf("generated constraint %q does not select the mirrored fork version", version)
 			}
 			return

@@ -16,6 +16,13 @@ func ResourceDhcpServer() *schema.Resource {
 			Optional:    true,
 			Description: "Whether to add dynamic ARP entry. ",
 		},
+		"add_dns_entries_suffix": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Computed:         true,
+			Description:      "Domain suffix appended to client names in dynamic DNS entries. When omitted, preserves the RouterOS setting.",
+			DiffSuppressFunc: AlwaysPresentNotUserProvided,
+		},
 		"address_pool": {
 			Type:     schema.TypeString,
 			Optional: true,

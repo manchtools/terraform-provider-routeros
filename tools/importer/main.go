@@ -33,7 +33,7 @@ var (
   required_providers {
     routeros = {
       source  = "manchtools/routeros"
-      version = "1.99.1-bogon.7"
+      version = "1.99.1-bogon.7.1"
     }
   }
 }

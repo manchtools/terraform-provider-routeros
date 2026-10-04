@@ -2,7 +2,7 @@
 
 A Bogon-focused fork of [terraform-routeros/terraform-provider-routeros](https://github.com/terraform-routeros/terraform-provider-routeros), based on upstream main at `0d8c069c20a012300dfeeb96cb343ad7a5e7ebfb`.
 
-The source address is `manchtools/routeros`. `main` is the stable default branch. Bogon builds version `1.99.1-bogon.7` into a local OpenTofu filesystem mirror; this fork has no registry publication or signed release pipeline. See [BOGON.md](BOGON.md) for scope, upstream contributions and verification limits.
+The source address is `manchtools/routeros`. `main` is the stable default branch. Bogon builds version `1.99.1-bogon.7.1` into a local OpenTofu filesystem mirror; this fork has no registry publication or signed release pipeline. See [BOGON.md](BOGON.md) for scope, upstream contributions and verification limits.
 
 ## Purpose
 
